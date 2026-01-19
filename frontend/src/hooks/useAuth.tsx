@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 
 interface AuthContextType {
     user: User | null;
+    userData: User | null;
     firebaseUser: FirebaseUser | null;
     loading: boolean;
     signIn: (email: string, password: string) => Promise<void>;
@@ -21,6 +22,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     isMembershipActive: boolean;
 }
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -164,6 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const value: AuthContextType = {
         user,
+        userData: user,
         firebaseUser,
         loading,
         signIn,
@@ -171,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         isMembershipActive,
     };
+
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

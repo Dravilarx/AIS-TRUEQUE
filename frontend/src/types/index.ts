@@ -129,19 +129,26 @@ export interface ServiceProvider {
 // Rating Types
 // ============================================
 
-export type RatingScore = 1 | 2 | 3 | 4 | 5;
+export interface RatingScore {
+    overall: number;
+    communication?: number;
+    quality?: number;
+    punctuality?: number;
+}
 
 export interface Rating {
     id: string;
-    targetType: 'article' | 'service';
+    targetType: 'user' | 'service';
     targetId: string;
     targetOwnerId: string;
     reviewerId: string;
+    reviewerName?: string;
     score: RatingScore;
-    comment?: string;
-    recommends?: boolean;
+    comment: string;
+    recommend: boolean;
     createdAt: Timestamp;
 }
+
 
 // ============================================
 // Filter & Search Types

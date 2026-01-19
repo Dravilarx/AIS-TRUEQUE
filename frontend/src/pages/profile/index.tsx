@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-    User, Mail, Phone, Calendar, Star, Package, Briefcase,
+    Mail, Phone, Calendar, Package, Briefcase,
     LogOut, Edit, Shield, CreditCard, Bell, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

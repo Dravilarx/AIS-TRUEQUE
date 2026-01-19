@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
     ArrowLeft, Heart, Share2, MessageCircle, Edit, Trash2,
-    Eye, Clock, MapPin, Tag, ChevronLeft, ChevronRight, Loader2
+    Eye, Clock, Tag, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -103,7 +103,7 @@ export function ArticleDetailPage() {
         );
     }
 
-    const isOwner = user?.uid === article.sellerId;
+    const isOwner = user?.id === article.sellerId;
     const condition = conditionLabels[article.condition as ArticleCondition];
 
     return (

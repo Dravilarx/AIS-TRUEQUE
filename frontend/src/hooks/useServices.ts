@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
     collection,
     doc,
@@ -89,7 +89,7 @@ export function useServices() {
             setLoading(true);
             const q = query(
                 collection(db, COLLECTION),
-                where('userId', '==', user.uid)
+                where('userId', '==', user.id)
             );
 
             const snapshot = await getDocs(q);
@@ -126,7 +126,7 @@ export function useServices() {
                 const now = Timestamp.now();
 
                 const serviceData = {
-                    userId: user.uid,
+                    userId: user.id,
                     businessName: data.businessName,
                     description: data.description,
                     category: data.category,

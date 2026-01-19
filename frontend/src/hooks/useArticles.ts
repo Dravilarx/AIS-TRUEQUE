@@ -26,9 +26,11 @@ const PAGE_SIZE = 12;
 export function useArticles() {
     const { user } = useAuth();
     const [articles, setArticles] = useState<ArticleWithSeller[]>([]);
+    const [myArticles, setMyArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(false);
     const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
+    const [currentFilters, setCurrentFilters] = useState<ArticleFilters>({});
 
     // Build query with filters
     const buildQuery = useCallback((filters: ArticleFilters) => {
@@ -63,6 +65,7 @@ export function useArticles() {
         async (filters: ArticleFilters = {}, reset = true) => {
             try {
                 setLoading(true);
+                setCurrentFilters(filters);
 
                 let q = buildQuery(filters);
 
@@ -94,6 +97,13 @@ export function useArticles() {
         [buildQuery, lastDoc]
     );
 
+    // Load more articles (pagination)
+    const loadMore = useCallback(() => {
+        if (hasMore && !loading) {
+            fetchArticles(currentFilters, false);
+        }
+    }, [hasMore, loading, currentFilters, fetchArticles]);
+
     // Get single article by ID
     const getArticle = useCallback(async (id: string): Promise<Article | null> => {
         try {
@@ -116,7 +126,7 @@ export function useArticles() {
 
     // Create new article
     const createArticle = useCallback(
-        async (articleData: Omit<Article, 'id' | 'sellerId' | 'views' | 'favorites' | 'createdAt' | 'updatedAt'>) => {
+        async (articleData: Omit<Article, 'id' | 'sellerId' | 'views' | 'favorites' | 'createdAt' | 'updatedAt' | 'status'>) => {
             if (!user) {
                 toast.error('Debes iniciar sesión');
                 return null;
@@ -128,7 +138,8 @@ export function useArticles() {
 
                 const newArticle = {
                     ...articleData,
-                    sellerId: user.id,
+                    sellerId: user.uid,
+                    status: 'active',
                     views: 0,
                     favorites: 0,
                     createdAt: now,
@@ -181,6 +192,7 @@ export function useArticles() {
             setLoading(true);
             await deleteDoc(doc(db, ARTICLES_COLLECTION, id));
             setArticles((prev) => prev.filter((a) => a.id !== id));
+            setMyArticles((prev) => prev.filter((a) => a.id !== id));
             toast.success('Artículo eliminado');
             return true;
         } catch (error) {
@@ -192,7 +204,34 @@ export function useArticles() {
         }
     }, []);
 
-    // Get user's articles
+    // Fetch user's articles
+    const fetchMyArticles = useCallback(async () => {
+        if (!user) return;
+
+        try {
+            setLoading(true);
+            const q = query(
+                collection(db, ARTICLES_COLLECTION),
+                where('sellerId', '==', user.uid),
+                orderBy('createdAt', 'desc')
+            );
+
+            const snapshot = await getDocs(q);
+            const articles = snapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+            })) as Article[];
+
+            setMyArticles(articles);
+        } catch (error) {
+            console.error('Error fetching my articles:', error);
+            toast.error('Error al cargar tus artículos');
+        } finally {
+            setLoading(false);
+        }
+    }, [user]);
+
+    // Get user's articles (legacy, kept for compatibility)
     const getMyArticles = useCallback(async () => {
         if (!user) return [];
 
@@ -200,7 +239,7 @@ export function useArticles() {
             setLoading(true);
             const q = query(
                 collection(db, ARTICLES_COLLECTION),
-                where('sellerId', '==', user.id),
+                where('sellerId', '==', user.uid),
                 orderBy('createdAt', 'desc')
             );
 
@@ -220,13 +259,16 @@ export function useArticles() {
 
     return {
         articles,
+        myArticles,
         loading,
         hasMore,
         fetchArticles,
+        loadMore,
         getArticle,
         createArticle,
         updateArticle,
         deleteArticle,
+        fetchMyArticles,
         getMyArticles,
     };
 }

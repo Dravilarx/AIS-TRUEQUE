@@ -2,8 +2,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { MainLayout } from '@/components/layouts/main-layout';
+
+// Pages
 import { HomePage } from '@/pages/home';
 import { LoginPage, RegisterPage } from '@/pages/auth/login';
+import { MarketplacePage } from '@/pages/marketplace';
+import { ArticleDetailPage } from '@/pages/marketplace/article-detail';
+import { ArticleFormPage } from '@/pages/marketplace/article-form';
+import { MyListingsPage } from '@/pages/marketplace/my-listings';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -48,20 +54,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 // Placeholder pages
-function MarketplacePage() {
-  return (
-    <div className="text-center py-12">
-      <h1 className="text-2xl font-bold">Marketplace</h1>
-      <p className="text-muted-foreground mt-2">Página en construcción</p>
-    </div>
-  );
-}
-
 function ServicesPage() {
   return (
     <div className="text-center py-12">
       <h1 className="text-2xl font-bold">Directorio de Servicios</h1>
-      <p className="text-muted-foreground mt-2">Página en construcción</p>
+      <p className="text-muted-foreground mt-2">Próximamente</p>
     </div>
   );
 }
@@ -70,7 +67,7 @@ function ProfilePage() {
   return (
     <div className="text-center py-12">
       <h1 className="text-2xl font-bold">Mi Perfil</h1>
-      <p className="text-muted-foreground mt-2">Página en construcción</p>
+      <p className="text-muted-foreground mt-2">Próximamente</p>
     </div>
   );
 }
@@ -122,7 +119,15 @@ function App() {
             }
           >
             <Route path="/" element={<HomePage />} />
+
+            {/* Marketplace routes */}
             <Route path="/marketplace" element={<MarketplacePage />} />
+            <Route path="/marketplace/new" element={<ArticleFormPage />} />
+            <Route path="/marketplace/edit/:id" element={<ArticleFormPage />} />
+            <Route path="/marketplace/my-listings" element={<MyListingsPage />} />
+            <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
+
+            {/* Other routes */}
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>

@@ -13,6 +13,7 @@ import { MyListingsPage } from '@/pages/marketplace/my-listings';
 import { ServicesPage } from '@/pages/services';
 import { ServiceDetailPage } from '@/pages/services/service-detail';
 import { ServiceFormPage } from '@/pages/services/service-form';
+import { ProfilePage } from '@/pages/profile';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -54,16 +55,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
-}
-
-// Placeholder pages
-function ProfilePage() {
-  return (
-    <div className="text-center py-12">
-      <h1 className="text-2xl font-bold">Mi Perfil</h1>
-      <p className="text-muted-foreground mt-2">Próximamente</p>
-    </div>
-  );
 }
 
 function MembershipPage() {

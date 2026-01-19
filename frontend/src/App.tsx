@@ -10,6 +10,9 @@ import { MarketplacePage } from '@/pages/marketplace';
 import { ArticleDetailPage } from '@/pages/marketplace/article-detail';
 import { ArticleFormPage } from '@/pages/marketplace/article-form';
 import { MyListingsPage } from '@/pages/marketplace/my-listings';
+import { ServicesPage } from '@/pages/services';
+import { ServiceDetailPage } from '@/pages/services/service-detail';
+import { ServiceFormPage } from '@/pages/services/service-form';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -54,15 +57,6 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 // Placeholder pages
-function ServicesPage() {
-  return (
-    <div className="text-center py-12">
-      <h1 className="text-2xl font-bold">Directorio de Servicios</h1>
-      <p className="text-muted-foreground mt-2">Próximamente</p>
-    </div>
-  );
-}
-
 function ProfilePage() {
   return (
     <div className="text-center py-12">
@@ -127,8 +121,13 @@ function App() {
             <Route path="/marketplace/my-listings" element={<MyListingsPage />} />
             <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
 
-            {/* Other routes */}
+            {/* Services routes */}
             <Route path="/services" element={<ServicesPage />} />
+            <Route path="/services/register" element={<ServiceFormPage />} />
+            <Route path="/services/edit/:id" element={<ServiceFormPage />} />
+            <Route path="/services/:id" element={<ServiceDetailPage />} />
+
+            {/* Profile */}
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

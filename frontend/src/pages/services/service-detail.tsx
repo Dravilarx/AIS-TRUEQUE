@@ -5,9 +5,12 @@ import {
     Clock, Edit, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StarRating } from '@/components/shared/star-rating';
+import { RatingForm } from '@/components/shared/rating-form';
+import { RatingList, RatingSummary } from '@/components/shared/rating-list';
 import { useServices } from '@/hooks/useServices';
+import { useRatings } from '@/hooks/useRatings';
 import { useAuth } from '@/hooks/useAuth';
 import { ServiceProvider } from '@/types';
 import { cn } from '@/lib/utils';
@@ -27,13 +30,25 @@ export function ServiceDetailPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { getService, loading } = useServices();
+    const {
+        ratings,
+        fetchRatings,
+        hasUserRated,
+        createRating,
+        getRatingSummary,
+        loading: ratingsLoading
+    } = useRatings();
 
     const [service, setService] = useState<ServiceProvider | null>(null);
     const [currentImage, setCurrentImage] = useState(0);
+    const [showRatingForm, setShowRatingForm] = useState(false);
+    const [canRate, setCanRate] = useState(false);
+    const [ratingSummary, setRatingSummary] = useState<any>(null);
 
     useEffect(() => {
         if (id) {
             loadService(id);
+            loadRatings(id);
         }
     }, [id]);
 
@@ -44,6 +59,17 @@ export function ServiceDetailPage() {
         } else {
             toast.error('Servicio no encontrado');
             navigate('/services');
+        }
+    };
+
+    const loadRatings = async (serviceId: string) => {
+        await fetchRatings(serviceId, 'service');
+        const summary = await getRatingSummary(serviceId, 'service');
+        setRatingSummary(summary);
+
+        if (user) {
+            const hasRated = await hasUserRated(serviceId, 'service');
+            setCanRate(!hasRated);
         }
     };
 
@@ -64,6 +90,22 @@ export function ServiceDetailPage() {
         if (service?.contact.email) {
             window.location.href = `mailto:${service.contact.email}`;
         }
+    };
+
+    const handleRatingSubmit = async (data: {
+        score: { overall: number };
+        comment: string;
+        recommend: boolean;
+    }) => {
+        if (!id) return false;
+
+        const success = await createRating(id, 'service', data);
+        if (success) {
+            setShowRatingForm(false);
+            setCanRate(false);
+            loadRatings(id);
+        }
+        return success;
     };
 
     if (loading || !service) {
@@ -141,6 +183,42 @@ export function ServiceDetailPage() {
                             🛠️
                         </div>
                     )}
+
+                    {/* Ratings Section */}
+                    <div className="space-y-4 pt-4">
+                        <h2 className="text-xl font-bold">Calificaciones y Reseñas</h2>
+
+                        {/* Summary */}
+                        {ratingSummary && ratingSummary.totalRatings > 0 && (
+                            <RatingSummary {...ratingSummary} />
+                        )}
+
+                        {/* Rating Form */}
+                        {!isOwner && canRate && !showRatingForm && (
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setShowRatingForm(true)}
+                            >
+                                <Star className="mr-2 h-4 w-4" />
+                                Escribir una reseña
+                            </Button>
+                        )}
+
+                        {showRatingForm && (
+                            <RatingForm
+                                targetId={id!}
+                                targetType="service"
+                                targetName={service.businessName}
+                                onSubmit={handleRatingSubmit}
+                                onCancel={() => setShowRatingForm(false)}
+                                loading={ratingsLoading}
+                            />
+                        )}
+
+                        {/* Rating List */}
+                        <RatingList ratings={ratings} loading={ratingsLoading} />
+                    </div>
                 </div>
 
                 {/* Info */}

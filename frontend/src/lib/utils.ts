@@ -21,8 +21,31 @@ export function formatPrice(price: number): string {
 
 /**
  * Format relative time (e.g., "hace 2 días")
+ * Handles Date, Firestore Timestamp, and raw timestamp objects
  */
-export function formatRelativeTime(date: Date): string {
+export function formatRelativeTime(dateInput: unknown): string {
+    if (!dateInput) return 'Fecha no disponible';
+
+    let date: Date;
+
+    // Handle different input types
+    if (dateInput instanceof Date) {
+        date = dateInput;
+    } else if (typeof dateInput === 'object' && dateInput !== null) {
+        const obj = dateInput as { toDate?: () => Date; seconds?: number };
+        if (typeof obj.toDate === 'function') {
+            // Firestore Timestamp
+            date = obj.toDate();
+        } else if (typeof obj.seconds === 'number') {
+            // Raw Firestore timestamp object
+            date = new Date(obj.seconds * 1000);
+        } else {
+            return 'Fecha inválida';
+        }
+    } else {
+        return 'Fecha inválida';
+    }
+
     const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

@@ -7,9 +7,27 @@ dotenv.config();
 // In production, use environment variable for service account
 // In development, you can use a service account JSON file
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    : undefined;
+const getServiceAccount = () => {
+    const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (!serviceAccountEnv) return undefined;
+
+    try {
+        // Try parsing as raw JSON first
+        return JSON.parse(serviceAccountEnv);
+    } catch (error) {
+        // If parsing fails, it might be Base64 encoded (common for Vercel env vars)
+        try {
+            const buffer = Buffer.from(serviceAccountEnv, 'base64');
+            const decoded = buffer.toString('utf-8');
+            return JSON.parse(decoded);
+        } catch (base64Error) {
+            console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT:', error);
+            return undefined;
+        }
+    }
+};
+
+const serviceAccount = getServiceAccount();
 
 if (!admin.apps.length) {
     admin.initializeApp({

@@ -160,9 +160,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Check membership status
-    const isMembershipActive =
-        user?.membership.status === 'active' &&
-        user.membership.expiresAt.toDate() > new Date();
+    const isMembershipActive = (() => {
+        if (!user?.membership) return false;
+        if (user.membership.status !== 'active') return false;
+
+        const expiresAt = user.membership.expiresAt;
+        if (!expiresAt) return false;
+
+        // Handle both Firestore Timestamp and regular Date
+        let expirationDate: Date;
+        if (typeof expiresAt.toDate === 'function') {
+            expirationDate = expiresAt.toDate();
+        } else if (expiresAt instanceof Date) {
+            expirationDate = expiresAt;
+        } else if (typeof expiresAt === 'object' && expiresAt.seconds) {
+            // Handle raw Firestore timestamp object
+            expirationDate = new Date(expiresAt.seconds * 1000);
+        } else {
+            return false;
+        }
+
+        return expirationDate > new Date();
+    })();
 
     const value: AuthContextType = {
         user,

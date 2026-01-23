@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { ThemeProvider } from '@/hooks/useTheme';
 import { MainLayout } from '@/components/layouts/main-layout';
 
 // Pages
@@ -73,73 +74,75 @@ function MembershipPage() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public routes */}
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            }
+    <ThemeProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/login"
+              element={
+                <PublicRoute>
+                  <LoginPage />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicRoute>
+                  <RegisterPage />
+                </PublicRoute>
+              }
+            />
+            <Route path="/membership" element={<MembershipPage />} />
+
+            {/* Protected routes with MainLayout */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/" element={<HomePage />} />
+
+              {/* Marketplace routes */}
+              <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/marketplace/new" element={<ArticleFormPage />} />
+              <Route path="/marketplace/edit/:id" element={<ArticleFormPage />} />
+              <Route path="/marketplace/my-listings" element={<MyListingsPage />} />
+              <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
+
+              {/* Services routes */}
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/services/register" element={<ServiceFormPage />} />
+              <Route path="/services/edit/:id" element={<ServiceFormPage />} />
+              <Route path="/services/:id" element={<ServiceDetailPage />} />
+
+              {/* Profile */}
+              <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+
+          {/* Toast notifications */}
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'hsl(var(--card))',
+                color: 'hsl(var(--card-foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            }}
           />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <RegisterPage />
-              </PublicRoute>
-            }
-          />
-          <Route path="/membership" element={<MembershipPage />} />
-
-          {/* Protected routes with MainLayout */}
-          <Route
-            element={
-              <ProtectedRoute>
-                <MainLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/" element={<HomePage />} />
-
-            {/* Marketplace routes */}
-            <Route path="/marketplace" element={<MarketplacePage />} />
-            <Route path="/marketplace/new" element={<ArticleFormPage />} />
-            <Route path="/marketplace/edit/:id" element={<ArticleFormPage />} />
-            <Route path="/marketplace/my-listings" element={<MyListingsPage />} />
-            <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
-
-            {/* Services routes */}
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/services/register" element={<ServiceFormPage />} />
-            <Route path="/services/edit/:id" element={<ServiceFormPage />} />
-            <Route path="/services/:id" element={<ServiceDetailPage />} />
-
-            {/* Profile */}
-            <Route path="/profile" element={<ProfilePage />} />
-          </Route>
-
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-
-        {/* Toast notifications */}
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'hsl(var(--card))',
-              color: 'hsl(var(--card-foreground))',
-              border: '1px solid hsl(var(--border))',
-            },
-          }}
-        />
-      </AuthProvider>
-    </BrowserRouter>
+        </AuthProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

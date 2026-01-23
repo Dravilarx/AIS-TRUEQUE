@@ -11,10 +11,13 @@ import {
     Bell,
     Search,
     LogOut,
+    Moon,
+    Sun,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { cn, getInitials } from '@/lib/utils';
 
 const navItems = [
@@ -26,6 +29,7 @@ const navItems = [
 
 export function MainLayout() {
     const { user, signOut } = useAuth();
+    const { resolvedTheme, toggleTheme } = useTheme();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -84,6 +88,15 @@ export function MainLayout() {
                             <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
                                 3
                             </span>
+                        </Button>
+
+                        {/* Theme Toggle */}
+                        <Button variant="ghost" size="icon" onClick={toggleTheme} title={resolvedTheme === 'light' ? 'Modo oscuro' : 'Modo claro'}>
+                            {resolvedTheme === 'light' ? (
+                                <Moon className="h-5 w-5" />
+                            ) : (
+                                <Sun className="h-5 w-5" />
+                            )}
                         </Button>
 
                         {/* User menu */}

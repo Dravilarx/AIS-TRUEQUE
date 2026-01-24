@@ -23,7 +23,7 @@ export function MyListingsPage() {
 
     useEffect(() => {
         fetchMyArticles();
-    }, []);
+    }, [fetchMyArticles]);
 
     const handleStatusChange = async (articleId: string, status: ArticleStatus) => {
         setActionLoading(articleId);

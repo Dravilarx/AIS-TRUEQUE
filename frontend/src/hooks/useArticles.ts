@@ -24,7 +24,7 @@ const ARTICLES_COLLECTION = 'articles';
 const PAGE_SIZE = 12;
 
 export function useArticles() {
-    const { user } = useAuth();
+    const { user, firebaseUser } = useAuth();
     const [articles, setArticles] = useState<ArticleWithSeller[]>([]);
     const [myArticles, setMyArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(false);
@@ -127,7 +127,7 @@ export function useArticles() {
     // Create new article
     const createArticle = useCallback(
         async (articleData: Omit<Article, 'id' | 'sellerId' | 'views' | 'favorites' | 'createdAt' | 'updatedAt' | 'status'>) => {
-            if (!user) {
+            if (!firebaseUser) {
                 toast.error('Debes iniciar sesión');
                 return null;
             }
@@ -138,7 +138,7 @@ export function useArticles() {
 
                 const newArticle = {
                     ...articleData,
-                    sellerId: user.uid,
+                    sellerId: firebaseUser.uid,
                     status: 'active',
                     views: 0,
                     favorites: 0,
@@ -147,18 +147,19 @@ export function useArticles() {
                 };
 
                 const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), newArticle);
-                toast.success('¡Artículo publicado!');
+                // toast.success('¡Artículo publicado!'); // Removed duplicate toast, let the caller handle it or keep one
 
                 return { id: docRef.id, ...newArticle } as Article;
             } catch (error) {
                 console.error('Error creating article:', error);
-                toast.error('Error al publicar artículo');
-                return null;
+                // toast.error('Error al publicar artículo'); // Caller handles errors too, but keeping one is okay.
+                // Re-throwing to allow caller to catch
+                throw error;
             } finally {
                 setLoading(false);
             }
         },
-        [user]
+        [firebaseUser]
     );
 
     // Update article
@@ -206,13 +207,13 @@ export function useArticles() {
 
     // Fetch user's articles
     const fetchMyArticles = useCallback(async () => {
-        if (!user) return;
+        if (!firebaseUser) return;
 
         try {
             setLoading(true);
             const q = query(
                 collection(db, ARTICLES_COLLECTION),
-                where('sellerId', '==', user.uid),
+                where('sellerId', '==', firebaseUser.uid),
                 orderBy('createdAt', 'desc')
             );
 
@@ -225,21 +226,21 @@ export function useArticles() {
             setMyArticles(articles);
         } catch (error) {
             console.error('Error fetching my articles:', error);
-            toast.error('Error al cargar tus artículos');
+            // toast.error('Error al cargar tus artículos'); // Suppress toast on initial load if it's transient
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [firebaseUser]);
 
     // Get user's articles (legacy, kept for compatibility)
     const getMyArticles = useCallback(async () => {
-        if (!user) return [];
+        if (!firebaseUser) return [];
 
         try {
             setLoading(true);
             const q = query(
                 collection(db, ARTICLES_COLLECTION),
-                where('sellerId', '==', user.uid),
+                where('sellerId', '==', firebaseUser.uid),
                 orderBy('createdAt', 'desc')
             );
 
@@ -255,7 +256,7 @@ export function useArticles() {
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    }, [firebaseUser]);
 
     return {
         articles,

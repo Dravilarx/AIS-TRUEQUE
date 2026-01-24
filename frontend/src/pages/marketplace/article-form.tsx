@@ -180,14 +180,14 @@ export function ArticleFormPage() {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 category: formData.category as any,
-                subcategory: formData.subcategory || undefined,
+                subcategory: formData.subcategory || null,
                 price: Number(formData.price),
                 priceNegotiable: formData.priceNegotiable,
                 condition: formData.condition,
                 metadata: {
-                    grade: formData.grade || undefined,
-                    size: formData.size || undefined,
-                    brand: formData.brand || undefined,
+                    grade: formData.grade || null,
+                    size: formData.size || null,
+                    brand: formData.brand || null,
                 },
                 images: formData.images,
             };
@@ -197,6 +197,9 @@ export function ArticleFormPage() {
                 toast.success('Artículo actualizado');
             } else {
                 await createArticle(articleData);
+                // Success toast is now handled in createArticle or here? 
+                // In my previous edit of useArticles, I commented out the toast there to avoid duplicates.
+                // So keeping it here is correct.
                 toast.success('Artículo publicado');
             }
 

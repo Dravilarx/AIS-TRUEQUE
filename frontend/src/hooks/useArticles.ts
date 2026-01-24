@@ -208,6 +208,10 @@ export function useArticles() {
     // Fetch user's articles
     const fetchMyArticles = useCallback(async () => {
         if (!firebaseUser) return;
+        if (!firebaseUser.uid) {
+            console.warn('User is logged in but has no UID?', firebaseUser);
+            return;
+        }
 
         try {
             setLoading(true);
@@ -226,7 +230,7 @@ export function useArticles() {
             setMyArticles(articles);
         } catch (error) {
             console.error('Error fetching my articles:', error);
-            // toast.error('Error al cargar tus artículos'); // Suppress toast on initial load if it's transient
+            // toast.error('Error al cargar tus artículos'); 
         } finally {
             setLoading(false);
         }

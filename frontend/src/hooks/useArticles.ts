@@ -23,6 +23,8 @@ import toast from 'react-hot-toast';
 const ARTICLES_COLLECTION = 'articles';
 const PAGE_SIZE = 12;
 
+import { prepareForFirestore } from '@/lib/firestore-utils';
+
 export function useArticles() {
     const { user, firebaseUser } = useAuth();
     const [articles, setArticles] = useState<ArticleWithSeller[]>([]);
@@ -32,6 +34,7 @@ export function useArticles() {
     const [hasMore, setHasMore] = useState(true);
     const [currentFilters, setCurrentFilters] = useState<ArticleFilters>({});
 
+    // ... (buildQuery stays the same) ...
     // Build query with filters
     const buildQuery = useCallback((filters: ArticleFilters) => {
         let q = query(
@@ -124,11 +127,11 @@ export function useArticles() {
         }
     }, []);
 
-    // Create new article
+    // Create new article - RADICAL SANITIZATION APPLIED
     const createArticle = useCallback(
         async (articleData: Omit<Article, 'id' | 'sellerId' | 'views' | 'favorites' | 'createdAt' | 'updatedAt' | 'status'>) => {
-            if (!firebaseUser) {
-                toast.error('Debes iniciar sesión');
+            if (!firebaseUser?.uid) {
+                toast.error('Sesión no válida. Recarga la página.');
                 return null;
             }
 
@@ -136,7 +139,8 @@ export function useArticles() {
                 setLoading(true);
                 const now = Timestamp.now();
 
-                const newArticle = {
+                // 1. Construct the object locally
+                const rawArticle = {
                     ...articleData,
                     sellerId: firebaseUser.uid,
                     status: 'active',
@@ -146,14 +150,17 @@ export function useArticles() {
                     updatedAt: now,
                 };
 
-                const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), newArticle);
-                // toast.success('¡Artículo publicado!'); // Removed duplicate toast, let the caller handle it or keep one
+                // 2. SANITIZE IT: This strips ALL undefined values recursively
+                const cleanArticle = prepareForFirestore(rawArticle);
 
-                return { id: docRef.id, ...newArticle } as Article;
+                console.log('📝 Attempting to write sanitized article:', cleanArticle);
+
+                const docRef = await addDoc(collection(db, ARTICLES_COLLECTION), cleanArticle);
+
+                return { id: docRef.id, ...cleanArticle } as Article;
             } catch (error) {
-                console.error('Error creating article:', error);
-                // toast.error('Error al publicar artículo'); // Caller handles errors too, but keeping one is okay.
-                // Re-throwing to allow caller to catch
+                console.error('🔥 CRITICAL Error creating article:', error);
+                toast.error('Error crítico al guardar. Ver consola.');
                 throw error;
             } finally {
                 setLoading(false);
@@ -162,17 +169,22 @@ export function useArticles() {
         [firebaseUser]
     );
 
-    // Update article
+    // Update article - RADICAL SANITIZATION APPLIED
     const updateArticle = useCallback(
         async (id: string, updates: Partial<Article>) => {
             try {
                 setLoading(true);
                 const docRef = doc(db, ARTICLES_COLLECTION, id);
 
-                await updateDoc(docRef, {
+                const updatesWithTimestamp = {
                     ...updates,
                     updatedAt: Timestamp.now(),
-                });
+                };
+
+                // Sanitize before update
+                const cleanUpdates = prepareForFirestore(updatesWithTimestamp);
+
+                await updateDoc(docRef, cleanUpdates);
 
                 toast.success('Artículo actualizado');
                 return true;
@@ -205,11 +217,13 @@ export function useArticles() {
         }
     }, []);
 
-    // Fetch user's articles
+    // Fetch user's articles - STRICT GUARD
     const fetchMyArticles = useCallback(async () => {
-        if (!firebaseUser) return;
-        if (!firebaseUser.uid) {
-            console.warn('User is logged in but has no UID?', firebaseUser);
+        // Strict guard: If there is no UID, we DO NOT QUERY. Period.
+        const uid = firebaseUser?.uid;
+
+        if (!uid) {
+            console.log('⏸️ fetchMyArticles skipped: No UID yet.');
             return;
         }
 
@@ -217,7 +231,7 @@ export function useArticles() {
             setLoading(true);
             const q = query(
                 collection(db, ARTICLES_COLLECTION),
-                where('sellerId', '==', firebaseUser.uid),
+                where('sellerId', '==', uid),
                 orderBy('createdAt', 'desc')
             );
 
@@ -230,21 +244,21 @@ export function useArticles() {
             setMyArticles(articles);
         } catch (error) {
             console.error('Error fetching my articles:', error);
-            // toast.error('Error al cargar tus artículos'); 
         } finally {
             setLoading(false);
         }
-    }, [firebaseUser]);
+    }, [firebaseUser]); // We react to firebaseUser changes
 
-    // Get user's articles (legacy, kept for compatibility)
+    // Get user's articles (legacy)
     const getMyArticles = useCallback(async () => {
-        if (!firebaseUser) return [];
+        const uid = firebaseUser?.uid;
+        if (!uid) return [];
 
         try {
             setLoading(true);
             const q = query(
                 collection(db, ARTICLES_COLLECTION),
-                where('sellerId', '==', firebaseUser.uid),
+                where('sellerId', '==', uid),
                 orderBy('createdAt', 'desc')
             );
 
@@ -255,7 +269,6 @@ export function useArticles() {
             })) as Article[];
         } catch (error) {
             console.error('Error fetching my articles:', error);
-            toast.error('Error al cargar tus artículos');
             return [];
         } finally {
             setLoading(false);

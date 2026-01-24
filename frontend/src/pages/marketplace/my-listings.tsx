@@ -4,6 +4,7 @@ import { Plus, Package, Edit, Trash2, Eye, MoreVertical, Loader2 } from 'lucide-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArticleGridSkeleton } from '@/components/shared/skeleton';
+import { useAuth } from '@/hooks/useAuth';
 import { useArticles } from '@/hooks/useArticles';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
 import { Article, ArticleStatus } from '@/types';
@@ -17,13 +18,26 @@ const statusConfig: Record<ArticleStatus, { label: string; color: string }> = {
 };
 
 export function MyListingsPage() {
+    const { firebaseUser } = useAuth();
     const { myArticles, loading, fetchMyArticles, updateArticle, deleteArticle } = useArticles();
     const [actionLoading, setActionLoading] = useState<string | null>(null);
     const [openMenu, setOpenMenu] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchMyArticles();
-    }, [fetchMyArticles]);
+        // Only fetch if we have a valid session
+        if (firebaseUser?.uid) {
+            fetchMyArticles();
+        }
+    }, [fetchMyArticles, firebaseUser?.uid]);
+
+    // Auth guard at component level - prevents flashing or querying without context
+    // We import { useAuth } to check loading state too if needed, but for now relying on hook behavior
+    // If we assume useArticles already guards, this is just visual polish, but let's be safe.
+    if (!firebaseUser && !loading) {
+        // Optionally render "Please login" or just wait. 
+        // Assuming this page is protected by a Router Guard elsewhere, we just wait.
+        return <ArticleGridSkeleton count={1} />;
+    }
 
     const handleStatusChange = async (articleId: string, status: ArticleStatus) => {
         setActionLoading(articleId);

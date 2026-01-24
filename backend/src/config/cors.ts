@@ -14,9 +14,11 @@ export const corsOptions: cors.CorsOptions = {
             return callback(null, true);
         }
 
-        if (allowedOrigins.includes(origin)) {
+        // Allow allowed origins or any vercel.app subdomain
+        if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
+            console.warn(`Blocked CORS for origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },

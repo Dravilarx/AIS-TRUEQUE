@@ -12,12 +12,12 @@ interface UploadProgress {
 }
 
 export function useImageUpload() {
-    const { user } = useAuth();
+    const { user, firebaseUser } = useAuth();
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
 
     const uploadImage = useCallback(async (file: File, folder = 'articles'): Promise<string | null> => {
-        if (!user) {
+        if (!firebaseUser) {
             toast.error('Debes iniciar sesión para subir imágenes');
             return null;
         }
@@ -37,8 +37,9 @@ export function useImageUpload() {
         try {
             // Create unique filename
             const timestamp = Date.now();
-            const extension = file.name.split('.').pop();
-            const fileName = `${folder}/${user.uid}/${timestamp}.${extension}`;
+            const extension = file.name.split('.').pop() || 'jpg';
+            // Use firebaseUser.uid to ensure we strictly follow the auth provider's ID
+            const fileName = `${folder}/${firebaseUser.uid}/${timestamp}.${extension}`;
 
             const storageRef = ref(storage, fileName);
 
@@ -60,22 +61,20 @@ export function useImageUpload() {
             if (error.message === 'Upload timeout') {
                 toast.error('La carga tomó demasiado tiempo. Verifica tu conexión.');
             } else if (error.code === 'storage/unauthorized') {
-                toast.error('No tienes permisos para subir imágenes.');
-            } else if (error.code === 'storage/canceled') {
-                toast.error('La carga fue cancelada.');
+                toast.error(`Error (${error.code}): ${error.message}`);
             } else {
-                toast.error('Error al subir la imagen. Intenta nuevamente.');
+                toast.error(`Error: ${error.message || 'Error desconocido'}`);
             }
 
             return null;
         }
-    }, [user]);
+    }, [firebaseUser]);
 
     const uploadMultipleImages = useCallback(async (
         files: File[],
         folder = 'articles'
     ): Promise<string[]> => {
-        if (!user) {
+        if (!firebaseUser) {
             toast.error('Debes iniciar sesión para subir imágenes');
             return [];
         }
@@ -116,7 +115,7 @@ export function useImageUpload() {
 
         setUploading(false);
         return urls;
-    }, [user, uploadImage]);
+    }, [firebaseUser, uploadImage]);
 
     const deleteImage = useCallback(async (url: string): Promise<boolean> => {
         try {

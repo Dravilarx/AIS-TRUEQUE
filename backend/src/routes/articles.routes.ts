@@ -7,7 +7,7 @@ import {
     deleteArticle,
     getMyArticles,
 } from '../controllers/articles.controller';
-import { authMiddleware, membershipMiddleware } from '../middlewares/auth.middleware';
+import { authMiddleware, membershipMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { MainLayout } from '@/components/layouts/main-layout';
 
@@ -15,6 +16,7 @@ import { ServicesPage } from '@/pages/services';
 import { ServiceDetailPage } from '@/pages/services/service-detail';
 import { ServiceFormPage } from '@/pages/services/service-form';
 import { ProfilePage } from '@/pages/profile';
+import { AdminPanel } from '@/pages/admin/admin-panel';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -52,6 +54,25 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+// Admin route wrapper (requires admin role)
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, loading } = useAdmin();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
@@ -123,6 +144,16 @@ function App() {
               {/* Profile */}
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
+
+            {/* Admin routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminPanel />
+                </AdminRoute>
+              }
+            />
 
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />

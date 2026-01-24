@@ -13,10 +13,12 @@ import {
     LogOut,
     Moon,
     Sun,
+    Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useTheme } from '@/hooks/useTheme';
 import { cn, getInitials } from '@/lib/utils';
 
@@ -29,6 +31,7 @@ const navItems = [
 
 export function MainLayout() {
     const { user, signOut } = useAuth();
+    const { isAdmin } = useAdmin();
     const { resolvedTheme, toggleTheme } = useTheme();
     const location = useLocation();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -98,6 +101,15 @@ export function MainLayout() {
                                 <Sun className="h-5 w-5" />
                             )}
                         </Button>
+
+                        {/* Admin Panel Button - Only visible to admins */}
+                        {isAdmin && (
+                            <Link to="/admin">
+                                <Button variant="ghost" size="icon" title="Panel de Administración">
+                                    <Shield className="h-5 w-5 text-orange-500" />
+                                </Button>
+                            </Link>
+                        )}
 
                         {/* User menu */}
                         {user && (
@@ -173,6 +185,20 @@ export function MainLayout() {
                                     Publicar Artículo
                                 </Button>
                             </Link>
+
+                            {/* Admin Panel - Mobile - Only visible to admins */}
+                            {isAdmin && (
+                                <Link
+                                    to="/admin"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="mt-2"
+                                >
+                                    <Button variant="outline" className="w-full">
+                                        <Shield className="mr-2 h-4 w-4 text-orange-500" />
+                                        Panel de Administración
+                                    </Button>
+                                </Link>
+                            )}
                         </div>
                     </nav>
                 )}

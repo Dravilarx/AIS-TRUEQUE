@@ -117,12 +117,23 @@ export function ArticleFormPage() {
     };
 
     const handleImageUpload = async (files: File[]): Promise<string[]> => {
-        // Compress images before upload
-        const compressedFiles = await Promise.all(
-            files.map(file => compressImage(file, 1200, 0.8))
-        );
+        try {
+            // Show feedback during compression
+            const loadingToast = toast.loading('Preparando imágenes...');
 
-        return uploadMultipleImages(compressedFiles, 'articles');
+            // Compress images before upload
+            const compressedFiles = await Promise.all(
+                files.map(file => compressImage(file, 1200, 0.8))
+            );
+
+            toast.dismiss(loadingToast);
+
+            return uploadMultipleImages(compressedFiles, 'articles');
+        } catch (error) {
+            console.error('Error during image processing:', error);
+            toast.error('Error al procesar las imágenes');
+            return [];
+        }
     };
 
     const validateForm = (): boolean => {

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { articlesService, ArticleFilters } from '../services/articles.service';
-import { AuthRequest } from '../middlewares/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware';
 import { ArticleCategory, ArticleCondition } from '../types';
 
 /**

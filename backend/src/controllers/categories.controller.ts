@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { categoriesService, CategoryInput } from '../services/categories.service';
-import { AuthRequest } from '../middlewares/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 /**
  * Get all active categories

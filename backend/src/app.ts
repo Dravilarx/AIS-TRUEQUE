@@ -8,6 +8,7 @@ import { corsOptions } from './config/cors';
 import authRoutes from './routes/auth.routes';
 import articlesRoutes from './routes/articles.routes';
 import categoriesRoutes from './routes/categories.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app: Application = express();
 
@@ -38,6 +39,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/articles', articlesRoutes);
 app.use('/api/categories', categoriesRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

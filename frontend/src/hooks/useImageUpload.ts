@@ -42,16 +42,31 @@ export function useImageUpload() {
 
             const storageRef = ref(storage, fileName);
 
-            // Upload file
-            await uploadBytes(storageRef, file);
+            // Upload file with timeout
+            const uploadPromise = uploadBytes(storageRef, file);
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Upload timeout')), 30000)
+            );
+
+            await Promise.race([uploadPromise, timeoutPromise]);
 
             // Get download URL
             const downloadUrl = await getDownloadURL(storageRef);
 
             return downloadUrl;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error uploading image:', error);
-            toast.error('Error al subir la imagen');
+
+            if (error.message === 'Upload timeout') {
+                toast.error('La carga tomó demasiado tiempo. Verifica tu conexión.');
+            } else if (error.code === 'storage/unauthorized') {
+                toast.error('No tienes permisos para subir imágenes.');
+            } else if (error.code === 'storage/canceled') {
+                toast.error('La carga fue cancelada.');
+            } else {
+                toast.error('Error al subir la imagen. Intenta nuevamente.');
+            }
+
             return null;
         }
     }, [user]);
@@ -130,43 +145,81 @@ export function useImageUpload() {
         maxWidth = 1200,
         quality = 0.8
     ): Promise<File> => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+            // Set timeout for compression (10 seconds)
+            const timeout = setTimeout(() => {
+                console.warn('Image compression timeout, using original file');
+                resolve(file);
+            }, 10000);
+
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = new Image();
 
+            if (!ctx) {
+                console.error('Could not get canvas context');
+                clearTimeout(timeout);
+                resolve(file);
+                return;
+            }
+
             img.onload = () => {
-                let { width, height } = img;
+                try {
+                    let { width, height } = img;
 
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
+                    // Only compress if image is larger than maxWidth
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            clearTimeout(timeout);
+                            URL.revokeObjectURL(img.src); // Clean up
+
+                            if (blob) {
+                                const compressedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now(),
+                                });
+                                console.log(`Compressed ${file.name}: ${(file.size / 1024).toFixed(1)}KB → ${(blob.size / 1024).toFixed(1)}KB`);
+                                resolve(compressedFile);
+                            } else {
+                                console.warn('Blob creation failed, using original file');
+                                resolve(file);
+                            }
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                } catch (error) {
+                    console.error('Error during compression:', error);
+                    clearTimeout(timeout);
+                    URL.revokeObjectURL(img.src);
+                    resolve(file);
                 }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                ctx?.drawImage(img, 0, 0, width, height);
-
-                canvas.toBlob(
-                    (blob) => {
-                        if (blob) {
-                            const compressedFile = new File([blob], file.name, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now(),
-                            });
-                            resolve(compressedFile);
-                        } else {
-                            resolve(file);
-                        }
-                    },
-                    'image/jpeg',
-                    quality
-                );
             };
 
-            img.onerror = () => resolve(file);
-            img.src = URL.createObjectURL(file);
+            img.onerror = (error) => {
+                console.error('Error loading image for compression:', error);
+                clearTimeout(timeout);
+                URL.revokeObjectURL(img.src);
+                resolve(file); // Use original file on error
+            };
+
+            try {
+                img.src = URL.createObjectURL(file);
+            } catch (error) {
+                console.error('Error creating object URL:', error);
+                clearTimeout(timeout);
+                resolve(file);
+            }
         });
     }, []);
 

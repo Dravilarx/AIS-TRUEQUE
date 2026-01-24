@@ -171,10 +171,12 @@ export function ImageUpload({
                         ref={inputRef}
                         type="file"
                         accept="image/*"
+                        capture="environment"
                         multiple
                         onChange={handleFileSelect}
                         disabled={disabled || uploading}
                         className="absolute inset-0 cursor-pointer opacity-0"
+                        aria-label="Seleccionar o capturar imágenes"
                     />
 
                     {uploading ? (

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { auth } from '../config/firebase';
-import { AuthRequest, authMiddleware } from '../middlewares/auth.middleware';
+import { AuthRequest, authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 

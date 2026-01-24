@@ -8,8 +8,7 @@ import {
     reorderCategories,
     seedCategories,
 } from '../controllers/categories.controller';
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { adminMiddleware } from '../middlewares/admin.middleware';
+import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 

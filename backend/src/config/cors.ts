@@ -2,6 +2,7 @@ import cors from 'cors';
 
 const allowedOrigins = [
     'http://localhost:5173',           // Vite dev server
+    'http://localhost:5174',           // Vite dev server (alt port)
     'http://localhost:3000',           // Alternative dev
     'https://ais-trueque.vercel.app',  // Production
 ];

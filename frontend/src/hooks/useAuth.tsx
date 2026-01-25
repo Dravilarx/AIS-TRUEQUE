@@ -129,14 +129,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 );
 
                 await updateProfile(firebaseUser, { displayName });
-                const userData = await createUserDocument(firebaseUser, displayName);
-                setUser(userData);
 
+                console.log('Creando documento de usuario en Firestore...');
+                const userData = await createUserDocument(firebaseUser, displayName);
+
+                // Aseguramos que el estado del usuario esté seteado antes de terminar el loading
+                setUser(userData);
                 toast.success('¡Cuenta creada exitosamente!');
             } catch (error: unknown) {
+                console.error('Error detallado en signUp:', error);
                 const message =
                     error instanceof Error ? error.message : 'Error al crear cuenta';
-                toast.error(message);
+                toast.error(`Error: ${message}`);
                 throw error;
             } finally {
                 setLoading(false);

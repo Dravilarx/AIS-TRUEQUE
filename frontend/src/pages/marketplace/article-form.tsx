@@ -161,8 +161,8 @@ export function ArticleFormPage() {
             toast.error('Ingresa un precio válido');
             return false;
         }
-        if (formData.images.length < 3) {
-            toast.error('Debes subir al menos 3 imágenes');
+        if (formData.images.length < 1) {
+            toast.error('Debes subir al menos 1 imagen');
             return false;
         }
         return true;
@@ -243,7 +243,7 @@ export function ArticleFormPage() {
                             onImagesChange={handleImagesChange}
                             onUpload={handleImageUpload}
                             maxImages={5}
-                            minImages={3}
+                            minImages={1}
                             uploading={uploading}
                             disabled={submitting}
                         />

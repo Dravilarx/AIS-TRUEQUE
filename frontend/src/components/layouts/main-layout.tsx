@@ -42,9 +42,14 @@ export function MainLayout() {
             <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container flex h-16 items-center justify-between">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-primary">AIS</span>
-                        <span className="text-xl font-light">Trueque</span>
+                    <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
+                            <span className="text-xl font-bold tracking-tighter">AT</span>
+                        </div>
+                        <div className="flex flex-col leading-none">
+                            <span className="text-lg font-bold tracking-tight text-foreground">AIS</span>
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Trueque</span>
+                        </div>
                     </Link>
 
                     {/* Search - Desktop */}
@@ -86,11 +91,9 @@ export function MainLayout() {
                             </Button>
                         </Link>
 
-                        <Button variant="ghost" size="icon" className="relative">
+                        <Button variant="ghost" size="icon" className="relative text-muted-foreground transition-colors hover:text-foreground">
                             <Bell className="h-5 w-5" />
-                            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-white">
-                                3
-                            </span>
+                            {/* We will hide the badge until there are REAL notifications */}
                         </Button>
 
                         {/* Theme Toggle */}

@@ -1,5 +1,40 @@
 import { useState, useEffect } from 'react';
+import { User, Shield, CheckCircle, Ban, Trash2, Eye, RefreshCw, Star } from 'lucide-react';
 import * as adminService from '../../../services/admin.service';
+
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+
+    try {
+        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
+        const seconds = dateInput._seconds || dateInput.seconds;
+        if (seconds !== undefined) {
+            return new Date(seconds * 1000).toLocaleDateString('es-ES');
+        }
+
+        // Handle toDate() function if available
+        if (typeof dateInput.toDate === 'function') {
+            return dateInput.toDate().toLocaleDateString('es-ES');
+        }
+
+        // Handle case where it might be the MCP-like format { __type__: 'Timestamp', value: '...' }
+        if (dateInput.value && (dateInput.__type__ === 'Timestamp' || dateInput._type === 'Timestamp')) {
+            const date = new Date(dateInput.value);
+            if (!isNaN(date.getTime())) return date.toLocaleDateString('es-ES');
+        }
+
+        // Handle ISO strings, numbers, or Date objects
+        const date = new Date(dateInput);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES');
+        }
+
+        return 'N/A';
+    } catch (e) {
+        console.error('Error formatting date:', e, dateInput);
+        return 'N/A';
+    }
+};
 
 export const UsersTab: React.FC = () => {
     const [users, setUsers] = useState<adminService.UserRecord[]>([]);
@@ -30,7 +65,6 @@ export const UsersTab: React.FC = () => {
     const handleSetAdminRole = async (uid: string, isAdmin: boolean) => {
         try {
             await adminService.setAdminRole(uid, isAdmin);
-            alert(`Usuario ${isAdmin ? 'promovido a' : 'removido de'} administrador exitosamente`);
             loadUsers();
         } catch (err) {
             console.error('Error setting admin role:', err);
@@ -41,7 +75,6 @@ export const UsersTab: React.FC = () => {
     const handleSetUserStatus = async (uid: string, disabled: boolean) => {
         try {
             await adminService.setUserStatus(uid, disabled);
-            alert(`Usuario ${disabled ? 'deshabilitado' : 'habilitado'} exitosamente`);
             loadUsers();
         } catch (err) {
             console.error('Error setting user status:', err);
@@ -56,7 +89,6 @@ export const UsersTab: React.FC = () => {
 
         try {
             await adminService.deleteUser(uid);
-            alert('Usuario eliminado exitosamente');
             loadUsers();
         } catch (err) {
             console.error('Error deleting user:', err);
@@ -86,8 +118,10 @@ export const UsersTab: React.FC = () => {
     if (error) {
         return (
             <div className="tab-error">
-                <p>{error}</p>
-                <button onClick={loadUsers}>Reintentar</button>
+                <p className="text-destructive mb-4">{error}</p>
+                <button onClick={loadUsers} className="btn-refresh">
+                    <RefreshCw className="w-4 h-4 mr-2" /> Reintentar
+                </button>
             </div>
         );
     }
@@ -97,7 +131,7 @@ export const UsersTab: React.FC = () => {
             <div className="section-header">
                 <h2>Gestión de Usuarios</h2>
                 <button onClick={loadUsers} className="btn-refresh">
-                    🔄 Actualizar
+                    <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
                 </button>
             </div>
 
@@ -109,54 +143,52 @@ export const UsersTab: React.FC = () => {
                             <th>Nombre</th>
                             <th>Estado</th>
                             <th>Rol</th>
-                            <th>Fecha de Creación</th>
+                            <th>Creación</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {users.map(user => (
                             <tr key={user.uid} className={user.disabled ? 'disabled-row' : ''}>
-                                <td>{user.email || 'Sin email'}</td>
+                                <td className="font-medium">{user.email || 'Sin email'}</td>
                                 <td>{user.displayName || 'Sin nombre'}</td>
                                 <td>
                                     <span className={`status-badge ${user.disabled ? 'disabled' : 'active'}`}>
+                                        {user.disabled ? <Ban className="w-3 h-3 mr-1" /> : <CheckCircle className="w-3 h-3 mr-1" />}
                                         {user.disabled ? 'Deshabilitado' : 'Activo'}
                                     </span>
                                 </td>
                                 <td>
                                     <span className={`role-badge ${user.isAdmin ? 'admin' : 'user'}`}>
+                                        {user.isAdmin ? <Shield className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
                                         {user.isAdmin ? 'Admin' : 'Usuario'}
                                     </span>
                                 </td>
-                                <td>
-                                    {user.createdAt
-                                        ? new Date(user.createdAt.seconds ? user.createdAt.seconds * 1000 : user.createdAt).toLocaleDateString('es-ES')
-                                        : 'N/A'}
-                                </td>
+                                <td>{formatDate(user.createdAt)}</td>
                                 <td>
                                     <div className="action-buttons">
                                         <button
                                             onClick={() => openUserModal(user)}
-                                            className="btn-action btn-view"
+                                            className="btn-action"
                                             title="Ver detalles"
                                         >
-                                            👁️
+                                            <Eye className="w-4 h-4" />
                                         </button>
 
                                         <button
                                             onClick={() => handleSetAdminRole(user.uid, !user.isAdmin)}
-                                            className="btn-action btn-admin"
+                                            className="btn-action"
                                             title={user.isAdmin ? 'Quitar admin' : 'Hacer admin'}
                                         >
-                                            {user.isAdmin ? '⭐' : '☆'}
+                                            {user.isAdmin ? <Star className="w-4 h-4 fill-current text-yellow-500" /> : <Star className="w-4 h-4" />}
                                         </button>
 
                                         <button
                                             onClick={() => handleSetUserStatus(user.uid, !user.disabled)}
-                                            className="btn-action btn-status"
+                                            className="btn-action"
                                             title={user.disabled ? 'Habilitar' : 'Deshabilitar'}
                                         >
-                                            {user.disabled ? '✅' : '⛔'}
+                                            {user.disabled ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Ban className="w-4 h-4 text-red-500" />}
                                         </button>
 
                                         <button
@@ -164,7 +196,7 @@ export const UsersTab: React.FC = () => {
                                             className="btn-action btn-delete"
                                             title="Eliminar usuario"
                                         >
-                                            🗑️
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </td>
@@ -215,20 +247,12 @@ export const UsersTab: React.FC = () => {
 
                             <div className="user-detail">
                                 <label>Fecha de Creación:</label>
-                                <span>
-                                    {selectedUser.createdAt
-                                        ? new Date(selectedUser.createdAt.toDate()).toLocaleString('es-ES')
-                                        : 'N/A'}
-                                </span>
+                                <span>{formatDate(selectedUser.createdAt)}</span>
                             </div>
 
                             <div className="user-detail">
                                 <label>Última Actualización:</label>
-                                <span>
-                                    {selectedUser.updatedAt
-                                        ? new Date(selectedUser.updatedAt.toDate()).toLocaleString('es-ES')
-                                        : 'N/A'}
-                                </span>
+                                <span>{formatDate(selectedUser.updatedAt)}</span>
                             </div>
                         </div>
                     </div>

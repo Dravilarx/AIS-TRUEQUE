@@ -1,7 +1,42 @@
 import { useState, useEffect } from 'react';
+import { Package, Trash2, Eye, CheckCircle, RefreshCw, Layers } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { Article } from '../../../types';
+
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+
+    try {
+        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
+        const seconds = dateInput._seconds || dateInput.seconds;
+        if (seconds !== undefined) {
+            return new Date(seconds * 1000).toLocaleDateString('es-ES');
+        }
+
+        // Handle toDate() function if available
+        if (typeof dateInput.toDate === 'function') {
+            return dateInput.toDate().toLocaleDateString('es-ES');
+        }
+
+        // Handle case where it might be the MCP-like format { __type__: 'Timestamp', value: '...' }
+        if (dateInput.value && (dateInput.__type__ === 'Timestamp' || dateInput._type === 'Timestamp')) {
+            const date = new Date(dateInput.value);
+            if (!isNaN(date.getTime())) return date.toLocaleDateString('es-ES');
+        }
+
+        // Handle ISO strings, numbers, or Date objects
+        const date = new Date(dateInput);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES');
+        }
+
+        return 'N/A';
+    } catch (e) {
+        console.error('Error formatting date:', e, dateInput);
+        return 'N/A';
+    }
+};
 
 export const ArticlesTab: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
@@ -45,7 +80,6 @@ export const ArticlesTab: React.FC = () => {
 
         try {
             await deleteDoc(doc(db, 'articles', articleId));
-            alert('Artículo eliminado exitosamente');
             loadArticles();
         } catch (err) {
             console.error('Error deleting article:', err);
@@ -59,7 +93,6 @@ export const ArticlesTab: React.FC = () => {
             await updateDoc(doc(db, 'articles', article.id!), {
                 status: newStatus
             });
-            alert(`Artículo marcado como ${newStatus === 'available' ? 'disponible' : 'vendido'}`);
             loadArticles();
         } catch (err) {
             console.error('Error updating article status:', err);
@@ -96,8 +129,8 @@ export const ArticlesTab: React.FC = () => {
     if (error) {
         return (
             <div className="tab-error">
-                <p>{error}</p>
-                <button onClick={loadArticles}>Reintentar</button>
+                <p className="text-destructive mb-4">{error}</p>
+                <button onClick={loadArticles} className="btn-refresh"><RefreshCw className="w-4 h-4 mr-2" /> Reintentar</button>
             </div>
         );
     }
@@ -128,7 +161,7 @@ export const ArticlesTab: React.FC = () => {
                         </button>
                     </div>
                     <button onClick={loadArticles} className="btn-refresh">
-                        🔄 Actualizar
+                        <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
                     </button>
                 </div>
             </div>
@@ -158,41 +191,37 @@ export const ArticlesTab: React.FC = () => {
                                             className="article-thumbnail"
                                         />
                                     ) : (
-                                        <div className="no-image">📦</div>
+                                        <div className="no-image"><Package className="w-5 h-5 opacity-40" /></div>
                                     )}
                                 </td>
-                                <td>{article.title}</td>
+                                <td className="font-medium">{article.title}</td>
                                 <td>
-                                    <span className="category-badge">{article.category}</span>
+                                    <span className="category-badge"><Layers className="w-3 h-3 mr-1" /> {article.category}</span>
                                 </td>
-                                <td>${article.price.toLocaleString()}</td>
+                                <td className="whitespace-nowrap">${article.price.toLocaleString()}</td>
                                 <td>
                                     <span className={`status-badge ${article.status === 'available' ? 'active' : 'sold'}`}>
                                         {article.status === 'available' ? 'Disponible' : 'Vendido'}
                                     </span>
                                 </td>
                                 <td>{article.sellerName || 'Anónimo'}</td>
-                                <td>
-                                    {article.createdAt
-                                        ? new Date(article.createdAt.toDate()).toLocaleDateString('es-ES')
-                                        : 'N/A'}
-                                </td>
+                                <td>{formatDate(article.createdAt)}</td>
                                 <td>
                                     <div className="action-buttons">
                                         <button
                                             onClick={() => openModal(article)}
-                                            className="btn-action btn-view"
+                                            className="btn-action"
                                             title="Ver detalles"
                                         >
-                                            👁️
+                                            <Eye className="w-4 h-4" />
                                         </button>
 
                                         <button
                                             onClick={() => handleToggleActive(article)}
-                                            className="btn-action btn-status"
+                                            className="btn-action"
                                             title={article.status === 'available' ? 'Marcar como vendido' : 'Marcar como disponible'}
                                         >
-                                            {article.status === 'available' ? '✅' : '🔄'}
+                                            {article.status === 'available' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
                                         </button>
 
                                         <button
@@ -200,7 +229,7 @@ export const ArticlesTab: React.FC = () => {
                                             className="btn-action btn-delete"
                                             title="Eliminar artículo"
                                         >
-                                            🗑️
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </td>
@@ -208,13 +237,12 @@ export const ArticlesTab: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-
-                {filteredArticles.length === 0 && (
-                    <div className="empty-state">
-                        <p>📦 No hay artículos {filter !== 'all' && `con estado "${filter}"`}</p>
-                    </div>
-                )}
             </div>
+            {filteredArticles.length === 0 && (
+                <div className="empty-state">
+                    <p>📦 No hay artículos {filter !== 'all' && `con estado "${filter}"`}</p>
+                </div>
+            )}
 
             {/* Article Details Modal */}
             {showModal && selectedArticle && (
@@ -283,11 +311,7 @@ export const ArticlesTab: React.FC = () => {
 
                             <div className="article-detail">
                                 <label>Fecha de Creación:</label>
-                                <span>
-                                    {selectedArticle.createdAt
-                                        ? new Date(selectedArticle.createdAt.toDate()).toLocaleString('es-ES')
-                                        : 'N/A'}
-                                </span>
+                                <span>{formatDate(selectedArticle.createdAt)}</span>
                             </div>
 
                             {selectedArticle.views !== undefined && (

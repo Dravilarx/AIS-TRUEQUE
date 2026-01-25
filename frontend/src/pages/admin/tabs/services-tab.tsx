@@ -1,7 +1,42 @@
 import { useState, useEffect } from 'react';
+import { Briefcase, Trash2, Eye, CheckCircle, RefreshCw, Layers, Star } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { Service } from '../../../types';
+
+const formatDate = (dateInput: any) => {
+    if (!dateInput) return 'N/A';
+
+    try {
+        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
+        const seconds = dateInput._seconds || dateInput.seconds;
+        if (seconds !== undefined) {
+            return new Date(seconds * 1000).toLocaleDateString('es-ES');
+        }
+
+        // Handle toDate() function if available
+        if (typeof dateInput.toDate === 'function') {
+            return dateInput.toDate().toLocaleDateString('es-ES');
+        }
+
+        // Handle case where it might be the MCP-like format { __type__: 'Timestamp', value: '...' }
+        if (dateInput.value && (dateInput.__type__ === 'Timestamp' || dateInput._type === 'Timestamp')) {
+            const date = new Date(dateInput.value);
+            if (!isNaN(date.getTime())) return date.toLocaleDateString('es-ES');
+        }
+
+        // Handle ISO strings, numbers, or Date objects
+        const date = new Date(dateInput);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES');
+        }
+
+        return 'N/A';
+    } catch (e) {
+        console.error('Error formatting date:', e, dateInput);
+        return 'N/A';
+    }
+};
 
 export const ServicesTab: React.FC = () => {
     const [services, setServices] = useState<Service[]>([]);
@@ -45,7 +80,6 @@ export const ServicesTab: React.FC = () => {
 
         try {
             await deleteDoc(doc(db, 'services', serviceId));
-            alert('Servicio eliminado exitosamente');
             loadServices();
         } catch (err) {
             console.error('Error deleting service:', err);
@@ -59,7 +93,6 @@ export const ServicesTab: React.FC = () => {
             await updateDoc(doc(db, 'services', service.id!), {
                 status: newStatus
             });
-            alert(`Servicio marcado como ${newStatus === 'active' ? 'activo' : 'completado'}`);
             loadServices();
         } catch (err) {
             console.error('Error updating service status:', err);
@@ -96,8 +129,8 @@ export const ServicesTab: React.FC = () => {
     if (error) {
         return (
             <div className="tab-error">
-                <p>{error}</p>
-                <button onClick={loadServices}>Reintentar</button>
+                <p className="text-destructive mb-4">{error}</p>
+                <button onClick={loadServices} className="btn-refresh"><RefreshCw className="w-4 h-4 mr-2" /> Reintentar</button>
             </div>
         );
     }
@@ -128,7 +161,7 @@ export const ServicesTab: React.FC = () => {
                         </button>
                     </div>
                     <button onClick={loadServices} className="btn-refresh">
-                        🔄 Actualizar
+                        <RefreshCw className="w-4 h-4 mr-2" /> Actualizar
                     </button>
                 </div>
             </div>
@@ -159,14 +192,14 @@ export const ServicesTab: React.FC = () => {
                                             className="service-thumbnail"
                                         />
                                     ) : (
-                                        <div className="no-image">💼</div>
+                                        <div className="no-image"><Briefcase className="w-5 h-5 opacity-40" /></div>
                                     )}
                                 </td>
-                                <td>{service.title}</td>
+                                <td className="font-medium">{service.title}</td>
                                 <td>
-                                    <span className="category-badge">{service.category}</span>
+                                    <span className="category-badge"><Layers className="w-3 h-3 mr-1" /> {service.category}</span>
                                 </td>
-                                <td>${service.price.toLocaleString()}</td>
+                                <td className="whitespace-nowrap">${service.price.toLocaleString()}</td>
                                 <td>
                                     <span className={`status-badge ${service.status === 'active' ? 'active' : 'completed'}`}>
                                         {service.status === 'active' ? 'Activo' : 'Completado'}
@@ -174,32 +207,28 @@ export const ServicesTab: React.FC = () => {
                                 </td>
                                 <td>{service.providerName || 'Anónimo'}</td>
                                 <td>
-                                    <div className="rating-display">
-                                        ⭐ {service.averageRating?.toFixed(1) || 'N/A'}
-                                        {service.totalRatings ? ` (${service.totalRatings})` : ''}
+                                    <div className="rating-display flex items-center">
+                                        <Star className="w-3 h-3 mr-1 fill-current text-yellow-500" />
+                                        {service.averageRating?.toFixed(1) || '0.0'}
                                     </div>
                                 </td>
-                                <td>
-                                    {service.createdAt
-                                        ? new Date(service.createdAt.toDate()).toLocaleDateString('es-ES')
-                                        : 'N/A'}
-                                </td>
+                                <td>{formatDate(service.createdAt)}</td>
                                 <td>
                                     <div className="action-buttons">
                                         <button
                                             onClick={() => openModal(service)}
-                                            className="btn-action btn-view"
+                                            className="btn-action"
                                             title="Ver detalles"
                                         >
-                                            👁️
+                                            <Eye className="w-4 h-4" />
                                         </button>
 
                                         <button
                                             onClick={() => handleToggleActive(service)}
-                                            className="btn-action btn-status"
+                                            className="btn-action"
                                             title={service.status === 'active' ? 'Marcar como completado' : 'Marcar como activo'}
                                         >
-                                            {service.status === 'active' ? '✅' : '🔄'}
+                                            {service.status === 'active' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
                                         </button>
 
                                         <button
@@ -207,7 +236,7 @@ export const ServicesTab: React.FC = () => {
                                             className="btn-action btn-delete"
                                             title="Eliminar servicio"
                                         >
-                                            🗑️
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </td>
@@ -215,13 +244,12 @@ export const ServicesTab: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
-
-                {filteredServices.length === 0 && (
-                    <div className="empty-state">
-                        <p>💼 No hay servicios {filter !== 'all' && `con estado "${filter}"`}</p>
-                    </div>
-                )}
             </div>
+            {filteredServices.length === 0 && (
+                <div className="empty-state">
+                    <p>💼 No hay servicios {filter !== 'all' && `con estado "${filter}"`}</p>
+                </div>
+            )}
 
             {/* Service Details Modal */}
             {showModal && selectedService && (
@@ -300,11 +328,7 @@ export const ServicesTab: React.FC = () => {
 
                             <div className="service-detail">
                                 <label>Fecha de Creación:</label>
-                                <span>
-                                    {selectedService.createdAt
-                                        ? new Date(selectedService.createdAt.toDate()).toLocaleString('es-ES')
-                                        : 'N/A'}
-                                </span>
+                                <span>{formatDate(selectedService.createdAt)}</span>
                             </div>
 
                             {selectedService.views !== undefined && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { useNavigate } from 'react-router-dom';
+import { Users, CheckCircle, Ban, Shield, Package, Briefcase, LayoutDashboard, ArrowLeft } from 'lucide-react';
 import * as adminService from '../../services/admin.service';
 import { UsersTab } from './tabs/users-tab';
 import { ArticlesTab } from './tabs/articles-tab';
@@ -70,7 +71,7 @@ export const AdminPanel: React.FC = () => {
             <div className="admin-panel">
                 <div className="error-message">
                     <p>{error}</p>
-                    <button onClick={loadStats}>Reintentar</button>
+                    <button onClick={loadStats} className="btn-refresh">Reintentar</button>
                 </div>
             </div>
         );
@@ -79,9 +80,12 @@ export const AdminPanel: React.FC = () => {
     return (
         <div className="admin-panel">
             <div className="admin-header">
-                <h1>Panel de Administración</h1>
+                <div className="flex items-center gap-3">
+                    <LayoutDashboard className="w-8 h-8 text-primary" />
+                    <h1>Panel de Administración</h1>
+                </div>
                 <button onClick={() => navigate('/')} className="btn-secondary">
-                    Volver al Inicio
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Volver al Inicio
                 </button>
             </div>
 
@@ -89,7 +93,7 @@ export const AdminPanel: React.FC = () => {
             {stats && (
                 <div className="stats-grid">
                     <div className="stat-card">
-                        <div className="stat-icon users-icon">👥</div>
+                        <div className="stat-icon users-icon"><Users className="w-6 h-6" /></div>
                         <div className="stat-content">
                             <h3>Total de Usuarios</h3>
                             <p className="stat-number">{stats.totalUsers}</p>
@@ -97,7 +101,7 @@ export const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon active-icon">✅</div>
+                        <div className="stat-icon active-icon"><CheckCircle className="w-6 h-6" /></div>
                         <div className="stat-content">
                             <h3>Usuarios Activos</h3>
                             <p className="stat-number">{stats.activeUsers}</p>
@@ -105,7 +109,7 @@ export const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon disabled-icon">⛔</div>
+                        <div className="stat-icon disabled-icon"><Ban className="w-6 h-6" /></div>
                         <div className="stat-content">
                             <h3>Usuarios Deshabilitados</h3>
                             <p className="stat-number">{stats.disabledUsers}</p>
@@ -113,7 +117,7 @@ export const AdminPanel: React.FC = () => {
                     </div>
 
                     <div className="stat-card">
-                        <div className="stat-icon admin-icon">⭐</div>
+                        <div className="stat-icon admin-icon"><Shield className="w-6 h-6" /></div>
                         <div className="stat-content">
                             <h3>Administradores</h3>
                             <p className="stat-number">{stats.adminUsers}</p>
@@ -129,7 +133,7 @@ export const AdminPanel: React.FC = () => {
                         className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
                         onClick={() => setActiveTab('users')}
                     >
-                        <span className="tab-icon">👥</span>
+                        <Users className="w-4 h-4" />
                         <span className="tab-label">Usuarios</span>
                     </button>
 
@@ -137,7 +141,7 @@ export const AdminPanel: React.FC = () => {
                         className={`tab-button ${activeTab === 'articles' ? 'active' : ''}`}
                         onClick={() => setActiveTab('articles')}
                     >
-                        <span className="tab-icon">📦</span>
+                        <Package className="w-4 h-4" />
                         <span className="tab-label">Artículos</span>
                     </button>
 
@@ -145,7 +149,7 @@ export const AdminPanel: React.FC = () => {
                         className={`tab-button ${activeTab === 'services' ? 'active' : ''}`}
                         onClick={() => setActiveTab('services')}
                     >
-                        <span className="tab-icon">💼</span>
+                        <Briefcase className="w-4 h-4" />
                         <span className="tab-label">Servicios</span>
                     </button>
                 </div>

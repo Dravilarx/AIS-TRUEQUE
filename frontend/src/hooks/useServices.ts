@@ -18,6 +18,8 @@ import toast from 'react-hot-toast';
 
 const COLLECTION = 'services';
 
+import { prepareForFirestore } from '@/lib/firestore-utils';
+
 export interface ServiceFilters {
     category?: string;
     verified?: boolean;
@@ -144,8 +146,11 @@ export function useServices() {
                     createdAt: now,
                 };
 
-                const docRef = await addDoc(collection(db, COLLECTION), serviceData);
-                const newService = { id: docRef.id, ...serviceData } as ServiceProvider;
+                // Sanitize data
+                const cleanData = prepareForFirestore(serviceData);
+
+                const docRef = await addDoc(collection(db, COLLECTION), cleanData);
+                const newService = { id: docRef.id, ...cleanData } as ServiceProvider;
 
                 setMyService(newService);
                 toast.success('¡Servicio registrado! Pendiente de verificación.');
@@ -169,10 +174,13 @@ export function useServices() {
                 setLoading(true);
                 const docRef = doc(db, COLLECTION, id);
 
-                await updateDoc(docRef, updates);
+                // Sanitize updates
+                const cleanUpdates = prepareForFirestore(updates);
+
+                await updateDoc(docRef, cleanUpdates);
 
                 if (myService && myService.id === id) {
-                    setMyService({ ...myService, ...updates });
+                    setMyService({ ...myService, ...cleanUpdates } as ServiceProvider);
                 }
 
                 toast.success('Servicio actualizado');

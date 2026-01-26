@@ -148,17 +148,18 @@ export function ServiceFormPage() {
                 images: formData.images,
             };
 
+            let result;
             if (isEditing && id) {
-                await updateService(id, serviceData);
-                toast.success('Servicio actualizado');
+                result = await updateService(id, serviceData);
             } else {
-                await createService(serviceData);
-                toast.success('¡Servicio registrado!');
+                result = await createService(serviceData);
             }
 
-            navigate('/services');
+            if (result) {
+                navigate('/services');
+            }
         } catch (error) {
-            toast.error(isEditing ? 'Error al actualizar' : 'Error al registrar');
+            console.error('Error in handleSubmit:', error);
         } finally {
             setSubmitting(false);
         }

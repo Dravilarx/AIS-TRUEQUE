@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
     collection,
     doc,
@@ -30,7 +30,7 @@ export function useArticles() {
     const [articles, setArticles] = useState<ArticleWithSeller[]>([]);
     const [myArticles, setMyArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(false);
-    const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
+    const lastDocRef = useRef<DocumentSnapshot | null>(null);
     const [hasMore, setHasMore] = useState(true);
     const [currentFilters, setCurrentFilters] = useState<ArticleFilters>({});
 
@@ -71,6 +71,7 @@ export function useArticles() {
                 setCurrentFilters(filters);
 
                 let q = buildQuery(filters);
+                const lastDoc = lastDocRef.current;
 
                 if (!reset && lastDoc) {
                     q = query(q, startAfter(lastDoc));
@@ -88,7 +89,7 @@ export function useArticles() {
                     setArticles((prev) => [...prev, ...newArticles]);
                 }
 
-                setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
+                lastDocRef.current = snapshot.docs[snapshot.docs.length - 1] || null;
                 setHasMore(snapshot.docs.length === PAGE_SIZE);
             } catch (error) {
                 console.error('Error fetching articles:', error);
@@ -97,7 +98,7 @@ export function useArticles() {
                 setLoading(false);
             }
         },
-        [buildQuery, lastDoc]
+        [buildQuery]
     );
 
     // Load more articles (pagination)

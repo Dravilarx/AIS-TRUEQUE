@@ -76,3 +76,34 @@ export function getInitials(name: string): string {
         .toUpperCase()
         .slice(0, 2);
 }
+
+/**
+ * Format date consistently (handles Firestore Timestamps and regular Dates)
+ */
+export const formatDate = (dateInput: any): string => {
+    if (!dateInput) return 'N/A';
+
+    try {
+        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
+        const seconds = dateInput._seconds || dateInput.seconds;
+        if (seconds !== undefined) {
+            return new Date(seconds * 1000).toLocaleDateString('es-ES');
+        }
+
+        // Handle toDate() function if available
+        if (typeof dateInput.toDate === 'function') {
+            return dateInput.toDate().toLocaleDateString('es-ES');
+        }
+
+        // Handle ISO strings, numbers, or Date objects
+        const date = new Date(dateInput);
+        if (!isNaN(date.getTime())) {
+            return date.toLocaleDateString('es-ES');
+        }
+
+        return 'N/A';
+    } catch (e) {
+        console.error('Error formatting date:', e, dateInput);
+        return 'N/A';
+    }
+};

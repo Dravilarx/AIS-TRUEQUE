@@ -105,17 +105,52 @@ export const optionalAuth = async (
 
 /**
  * Middleware to check if user has active membership
- * For now, this middleware just passes through
- * In the future, implement actual membership checking logic
+ * Fetches user data from Firestore to verify membership status
  */
 export const membershipMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
 ): Promise<void> => {
-    // TODO: Implement membership checking
-    // For now, allow all authenticated users
-    next();
+    try {
+        if (!req.user) {
+            res.status(401).json({ error: 'Authentication required' });
+            return;
+        }
+
+        const userDoc = await admin.firestore().collection('users').doc(req.user.uid).get();
+
+        if (!userDoc.exists) {
+            res.status(404).json({ error: 'User not found' });
+            return;
+        }
+
+        const userData = userDoc.data();
+        const membership = userData?.membership;
+
+        if (membership?.status !== 'active') {
+            res.status(403).json({ error: 'Active membership required', code: 'MEMBERSHIP_REQUIRED' });
+            return;
+        }
+
+        // Check expiration
+        let expiresAt: Date;
+        if (membership.expiresAt?.toDate) {
+            expiresAt = membership.expiresAt.toDate();
+        } else {
+            expiresAt = new Date(membership.expiresAt);
+        }
+
+        if (expiresAt < new Date()) {
+            res.status(403).json({ error: 'Membership expired', code: 'MEMBERSHIP_EXPIRED' });
+            return;
+        }
+
+        next();
+    } catch (error) {
+        console.error('Membership check error:', error);
+        res.status(500).json({ error: 'Internal server error checking membership' });
+    }
 };
 
 // Compatibility exports - these can be used interchangeably with the main functions

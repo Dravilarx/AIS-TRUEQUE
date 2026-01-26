@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 
 export const MembershipPage = () => {
-    const { user, loading: authLoading } = useAuth();
+    const { user, firebaseUser, loading: authLoading } = useAuth();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -39,22 +39,21 @@ export const MembershipPage = () => {
     }
 
     const handlePayment = async () => {
-        if (!user) {
+        if (!user || !firebaseUser) {
             toast.error('Debes iniciar sesión para realizar el pago');
             return;
         }
 
         try {
             setLoading(true);
+            const token = await firebaseUser.getIdToken();
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/payments/create-preference`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    uid: user.id,
-                    email: user.email,
-                }),
             });
 
             const data = await response.json();

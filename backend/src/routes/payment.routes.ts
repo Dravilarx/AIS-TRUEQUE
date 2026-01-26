@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
 import admin from '../config/firebase';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 const db = admin.firestore();
 const router = Router();
@@ -11,12 +12,13 @@ const client = new MercadoPagoConfig({
 });
 
 // Esta es la dirección que creará el link de cobro
-router.post('/create-preference', async (req, res) => {
+router.post('/create-preference', authMiddleware, async (req, res) => {
     try {
-        const { uid, email } = req.body;
+        const uid = req.user?.uid;
+        const email = req.user?.email;
 
         if (!uid || !email) {
-            return res.status(400).json({ error: 'UID y Email son requeridos' });
+            return res.status(400).json({ error: 'Usuario o Email no identificados' });
         }
 
         const preference = new Preference(client);

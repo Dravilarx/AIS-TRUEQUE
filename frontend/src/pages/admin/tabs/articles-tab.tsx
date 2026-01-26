@@ -3,40 +3,7 @@ import { Package, Trash2, Eye, CheckCircle, RefreshCw, Layers } from 'lucide-rea
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { Article } from '../../../types';
-
-const formatDate = (dateInput: any) => {
-    if (!dateInput) return 'N/A';
-
-    try {
-        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
-        const seconds = dateInput._seconds || dateInput.seconds;
-        if (seconds !== undefined) {
-            return new Date(seconds * 1000).toLocaleDateString('es-ES');
-        }
-
-        // Handle toDate() function if available
-        if (typeof dateInput.toDate === 'function') {
-            return dateInput.toDate().toLocaleDateString('es-ES');
-        }
-
-        // Handle case where it might be the MCP-like format { __type__: 'Timestamp', value: '...' }
-        if (dateInput.value && (dateInput.__type__ === 'Timestamp' || dateInput._type === 'Timestamp')) {
-            const date = new Date(dateInput.value);
-            if (!isNaN(date.getTime())) return date.toLocaleDateString('es-ES');
-        }
-
-        // Handle ISO strings, numbers, or Date objects
-        const date = new Date(dateInput);
-        if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString('es-ES');
-        }
-
-        return 'N/A';
-    } catch (e) {
-        console.error('Error formatting date:', e, dateInput);
-        return 'N/A';
-    }
-};
+import { formatDate } from '../../../lib/utils';
 
 export const ArticlesTab: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
@@ -117,14 +84,6 @@ export const ArticlesTab: React.FC = () => {
         return true;
     });
 
-    if (loading) {
-        return (
-            <div className="tab-loading">
-                <div className="spinner"></div>
-                <p>Cargando artículos...</p>
-            </div>
-        );
-    }
 
     if (error) {
         return (
@@ -137,6 +96,11 @@ export const ArticlesTab: React.FC = () => {
 
     return (
         <div className="articles-tab">
+            {loading && (
+                <div className="tab-loading-overlay">
+                    <div className="spinner"></div>
+                </div>
+            )}
             <div className="section-header">
                 <h2>Gestión de Artículos</h2>
                 <div className="header-actions">

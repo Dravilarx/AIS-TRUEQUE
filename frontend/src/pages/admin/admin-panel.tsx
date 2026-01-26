@@ -18,7 +18,7 @@ interface UserStats {
 }
 
 export const AdminPanel: React.FC = () => {
-    const { isAdmin, loading: adminLoading } = useAdmin();
+    const { isAdmin } = useAdmin();
     const navigate = useNavigate();
 
     const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -26,12 +26,6 @@ export const AdminPanel: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Redirect if not admin
-    useEffect(() => {
-        if (!adminLoading && !isAdmin) {
-            navigate('/');
-        }
-    }, [isAdmin, adminLoading, navigate]);
 
     // Load stats
     useEffect(() => {
@@ -55,12 +49,18 @@ export const AdminPanel: React.FC = () => {
         }
     };
 
-    if (adminLoading || loading) {
+    if (loading) {
         return (
             <div className="admin-panel">
-                <div className="loading">
+                <div className="admin-header">
+                    <div className="flex items-center gap-3">
+                        <LayoutDashboard className="w-8 h-8 text-primary" />
+                        <h1>Panel de Administración</h1>
+                    </div>
+                </div>
+                <div className="loading-container">
                     <div className="spinner"></div>
-                    <p>Cargando panel de administración...</p>
+                    <p>Cargando datos del sistema...</p>
                 </div>
             </div>
         );

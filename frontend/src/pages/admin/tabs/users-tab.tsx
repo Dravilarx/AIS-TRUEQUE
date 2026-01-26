@@ -1,40 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User, Shield, CheckCircle, Ban, Trash2, Eye, RefreshCw, Star } from 'lucide-react';
 import * as adminService from '../../../services/admin.service';
-
-const formatDate = (dateInput: any) => {
-    if (!dateInput) return 'N/A';
-
-    try {
-        // Handle Firestore Timestamp (Admin SDK: _seconds, Client SDK: seconds)
-        const seconds = dateInput._seconds || dateInput.seconds;
-        if (seconds !== undefined) {
-            return new Date(seconds * 1000).toLocaleDateString('es-ES');
-        }
-
-        // Handle toDate() function if available
-        if (typeof dateInput.toDate === 'function') {
-            return dateInput.toDate().toLocaleDateString('es-ES');
-        }
-
-        // Handle case where it might be the MCP-like format { __type__: 'Timestamp', value: '...' }
-        if (dateInput.value && (dateInput.__type__ === 'Timestamp' || dateInput._type === 'Timestamp')) {
-            const date = new Date(dateInput.value);
-            if (!isNaN(date.getTime())) return date.toLocaleDateString('es-ES');
-        }
-
-        // Handle ISO strings, numbers, or Date objects
-        const date = new Date(dateInput);
-        if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString('es-ES');
-        }
-
-        return 'N/A';
-    } catch (e) {
-        console.error('Error formatting date:', e, dateInput);
-        return 'N/A';
-    }
-};
+import { formatDate } from '../../../lib/utils';
 
 export const UsersTab: React.FC = () => {
     const [users, setUsers] = useState<adminService.UserRecord[]>([]);
@@ -106,14 +73,6 @@ export const UsersTab: React.FC = () => {
         setShowUserModal(false);
     };
 
-    if (loading) {
-        return (
-            <div className="tab-loading">
-                <div className="spinner"></div>
-                <p>Cargando usuarios...</p>
-            </div>
-        );
-    }
 
     if (error) {
         return (
@@ -128,6 +87,11 @@ export const UsersTab: React.FC = () => {
 
     return (
         <div className="users-tab">
+            {loading && (
+                <div className="tab-loading-overlay">
+                    <div className="spinner"></div>
+                </div>
+            )}
             <div className="section-header">
                 <h2>Gestión de Usuarios</h2>
                 <button onClick={loadUsers} className="btn-refresh">

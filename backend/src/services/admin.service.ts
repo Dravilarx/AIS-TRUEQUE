@@ -187,26 +187,41 @@ export const setUserStatus = async (uid: string, disabled: boolean): Promise<voi
 };
 
 /**
- * Delete user account (Firestore only for now)
+ * Delete user account and all associated data (articles, services)
  */
 export const deleteUser = async (uid: string): Promise<void> => {
-    try {
-        // Delete from Firestore
-        const userRef = db.collection('users').doc(uid);
-        await userRef.delete();
+    const batch = db.batch();
 
-        // Try to delete from Firebase Auth (may fail if no permissions)
+    try {
+        // 1. Find and delete user's articles
+        const articlesSnapshot = await db.collection('articles').where('sellerId', '==', uid).get();
+        articlesSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 2. Find and delete user's services
+        const servicesSnapshot = await db.collection('services').where('providerId', '==', uid).get();
+        servicesSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // 3. Delete user document from Firestore
+        const userRef = db.collection('users').doc(uid);
+        batch.delete(userRef);
+
+        // Commit all Firestore deletions
+        await batch.commit();
+
+        // 4. Delete from Firebase Auth
         try {
             await auth.deleteUser(uid);
         } catch (error) {
-            console.warn('Could not delete from Firebase Auth (missing permissions):', error);
-            // Continue anyway - Firestore document is deleted
+            console.warn('Could not delete from Firebase Auth (missing permissions or already deleted):', error);
+            // Continue as Firestore data is purged
         }
-
-        // TODO: Delete user's articles, services, and other related data
     } catch (error) {
-        console.error('Error deleting user:', error);
-        throw new Error('Failed to delete user');
+        console.error('Error in cascading user deletion:', error);
+        throw new Error('Failed to delete user and associated data');
     }
 };
 

@@ -21,6 +21,7 @@ interface AuthContextType {
     signUp: (email: string, password: string, displayName: string) => Promise<void>;
     signOut: () => Promise<void>;
     isMembershipActive: boolean;
+    isAdmin: boolean;
 }
 
 
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [user, setUser] = useState<User | null>(null);
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
 
     // Fetch user data from Firestore
@@ -89,10 +91,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setFirebaseUser(firebaseUser);
 
             if (firebaseUser) {
-                const userData = await fetchUserData(firebaseUser.uid);
+                const [userData, idTokenResult] = await Promise.all([
+                    fetchUserData(firebaseUser.uid),
+                    firebaseUser.getIdTokenResult()
+                ]);
                 setUser(userData);
+                setIsAdmin(idTokenResult.claims.admin === true);
             } else {
                 setUser(null);
+                setIsAdmin(false);
             }
 
             setLoading(false);
@@ -196,6 +203,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         isMembershipActive,
+        isAdmin,
     };
 
 

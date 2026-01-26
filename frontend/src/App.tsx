@@ -139,13 +139,14 @@ function App() {
 
             {/* Admin routes */}
             <Route
-              path="/admin"
               element={
                 <AdminRoute>
-                  <AdminPanel />
+                  <MainLayout />
                 </AdminRoute>
               }
-            />
+            >
+              <Route path="/admin" element={<AdminPanel />} />
+            </Route>
 
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />

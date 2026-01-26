@@ -17,6 +17,8 @@ import { ServiceDetailPage } from '@/pages/services/service-detail';
 import { ServiceFormPage } from '@/pages/services/service-form';
 import { ProfilePage } from '@/pages/profile';
 import { AdminPanel } from '@/pages/admin/admin-panel';
+import { MembershipPage } from '@/pages/membership/membership-page';
+import { PaymentStatusPage } from '@/pages/membership/payment-status';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -79,19 +81,6 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function MembershipPage() {
-  return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-2xl font-bold">Membresía Requerida</h1>
-        <p className="text-muted-foreground mt-2">
-          Tu membresía ha expirado o está pendiente de activación.
-          Contacta al administrador para renovar tu suscripción.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function App() {
   return (
@@ -117,6 +106,9 @@ function App() {
               }
             />
             <Route path="/membership" element={<MembershipPage />} />
+            <Route path="/pago-exitoso" element={<PaymentStatusPage status="success" />} />
+            <Route path="/pago-fallido" element={<PaymentStatusPage status="failure" />} />
+            <Route path="/pago-pendiente" element={<PaymentStatusPage status="pending" />} />
 
             {/* Protected routes with MainLayout */}
             <Route

@@ -100,7 +100,7 @@ export function ProfilePage() {
             <Card className="overflow-hidden">
                 <div className={cn(
                     'p-4',
-                    membershipStatus === 'active' && 'bg-gradient-to-r from-primary to-primary/80 text-white'
+                    membershipStatus === 'active' ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-muted'
                 )}>
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -118,14 +118,24 @@ export function ProfilePage() {
                                 </p>
                             </div>
                         </div>
-                        <span className={cn(
-                            'rounded-full px-3 py-1 text-sm font-medium',
-                            membershipStatus === 'active'
-                                ? 'bg-white/20 text-white'
-                                : statusLabels[membershipStatus].color
-                        )}>
-                            {statusLabels[membershipStatus].label}
-                        </span>
+                        <div className="flex flex-col items-end gap-2">
+                            <span className={cn(
+                                'rounded-full px-3 py-1 text-sm font-medium',
+                                membershipStatus === 'active'
+                                    ? 'bg-white/20 text-white'
+                                    : statusLabels[membershipStatus].color
+                            )}>
+                                {statusLabels[membershipStatus].label}
+                            </span>
+
+                            {membershipStatus !== 'active' && (
+                                <Link to="/membership">
+                                    <Button size="sm" variant="secondary" className="h-8 text-xs">
+                                        Pagar Ahora
+                                    </Button>
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
             </Card>

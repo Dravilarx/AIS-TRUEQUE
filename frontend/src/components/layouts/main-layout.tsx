@@ -26,6 +26,7 @@ const navItems = [
     { href: '/', label: 'Inicio', icon: Home },
     { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
     { href: '/services', label: 'Servicios', icon: Briefcase },
+    { href: '/membership', label: 'Membresía', icon: Shield },
     { href: '/profile', label: 'Mi Perfil', icon: User },
 ];
 

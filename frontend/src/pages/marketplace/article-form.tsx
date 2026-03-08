@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Save, Loader2, Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +8,10 @@ import { ImageUpload } from '@/components/shared/image-upload';
 import { useArticles } from '@/hooks/useArticles';
 import { useCategories } from '@/hooks/useCategories';
 import { useImageUpload } from '@/hooks/useImageUpload';
+import { useAuth } from '@/hooks/useAuth';
 import { ArticleCondition } from '@/types';
 import toast from 'react-hot-toast';
+import { schoolsList } from '@/pages/schools';
 
 const conditions: { value: ArticleCondition; label: string; description: string }[] = [
     { value: 'new', label: 'Nuevo', description: 'Sin usar, con etiqueta' },
@@ -29,6 +31,7 @@ interface FormData {
     grade: string;
     size: string;
     brand: string;
+    school: string;
     images: string[];
 }
 
@@ -43,21 +46,40 @@ const initialFormData: FormData = {
     grade: '',
     size: '',
     brand: '',
+    school: '',
     images: [],
 };
 
 export function ArticleFormPage() {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
+    const [searchParams] = useSearchParams();
     const isEditing = Boolean(id);
 
-    const { createArticle, updateArticle, getArticle, loading: articlesLoading } = useArticles();
+    const { user } = useAuth();
+    const { createArticle, updateArticle, getArticle, getActiveArticlesCount } = useArticles();
     const { categories, loading: categoriesLoading } = useCategories('article');
     const { uploadMultipleImages, uploading, compressImage } = useImageUpload();
 
-    const [formData, setFormData] = useState<FormData>(initialFormData);
+    const [formData, setFormData] = useState<FormData>({ ...initialFormData, school: searchParams.get('school') || '' });
     const [submitting, setSubmitting] = useState(false);
     const [loadingArticle, setLoadingArticle] = useState(isEditing);
+
+    // Paywall Count limit state
+    const [activeListingsCount, setActiveListingsCount] = useState<number | null>(null);
+    const [loadingCount, setLoadingCount] = useState(!isEditing);
+
+    // Fetch active article count for paywall (only if not editing)
+    useEffect(() => {
+        if (!isEditing && user) {
+            getActiveArticlesCount().then(count => {
+                setActiveListingsCount(count);
+                setLoadingCount(false);
+            });
+        } else {
+            setLoadingCount(false);
+        }
+    }, [isEditing, user, getActiveArticlesCount]);
 
     // Load article data if editing
     useEffect(() => {
@@ -83,6 +105,7 @@ export function ArticleFormPage() {
                     grade: article.metadata?.grade || '',
                     size: article.metadata?.size || '',
                     brand: article.metadata?.brand || '',
+                    school: article.metadata?.school || '',
                     images: article.images,
                 });
             } else {
@@ -180,14 +203,15 @@ export function ArticleFormPage() {
                 title: formData.title.trim(),
                 description: formData.description.trim(),
                 category: formData.category as any,
-                subcategory: formData.subcategory || null,
+                subcategory: formData.subcategory || undefined,
                 price: Number(formData.price),
                 priceNegotiable: formData.priceNegotiable,
                 condition: formData.condition,
                 metadata: {
-                    grade: formData.grade || null,
-                    size: formData.size || null,
-                    brand: formData.brand || null,
+                    grade: formData.grade || undefined,
+                    size: formData.size || undefined,
+                    brand: formData.brand || undefined,
+                    school: formData.school || undefined,
                 },
                 images: formData.images,
             };
@@ -211,10 +235,53 @@ export function ArticleFormPage() {
         }
     };
 
-    if (loadingArticle) {
+    if (loadingArticle || loadingCount) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    // Paywall validation
+    const isFreeTier = user?.accountTier === 'free' || !user?.accountTier;
+    const limitReached = !isEditing && isFreeTier && activeListingsCount !== null && activeListingsCount >= 2;
+
+    if (limitReached) {
+        return (
+            <div className="mx-auto max-w-2xl space-y-6 pt-10">
+                <div className="flex items-center gap-4 mb-4">
+                    <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                        <ArrowLeft className="h-5 w-5" />
+                    </Button>
+                    <h1 className="text-2xl font-bold">Publicar artículo</h1>
+                </div>
+
+                <Card className="border-2 border-primary/20 shadow-xl overflow-hidden rounded-3xl">
+                    <div className="bg-primary/5 p-10 flex flex-col items-center text-center space-y-8">
+                        <div className="bg-background p-6 rounded-full shadow-lg border border-primary/10">
+                            <Lock className="w-16 h-16 text-primary" />
+                        </div>
+
+                        <div className="space-y-4">
+                            <h2 className="text-3xl font-extrabold text-foreground tracking-tight">
+                                Límite de publicaciones gratuitas
+                            </h2>
+                            <p className="text-muted-foreground text-lg max-w-md mx-auto leading-relaxed">
+                                Has alcanzado el límite de <strong>2 publicaciones activas</strong>. Conviértete en <span className="text-primary font-bold">Vecino Validado</span> para publicar sin límites, obtener tu insignia de confianza KYC y acceder a los clústeres exclusivos de colegios.
+                            </p>
+                        </div>
+
+                        <Button
+                            onClick={() => navigate('/membership')}
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-7 px-8 rounded-2xl text-lg flex items-center gap-2 group w-full sm:w-auto shadow-xl transition-all hover:scale-105"
+                        >
+                            <ShieldCheck className="w-6 h-6" />
+                            Actualizar a Vecino Validado
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </Button>
+                    </div>
+                </Card>
             </div>
         );
     }
@@ -383,6 +450,29 @@ export function ArticleFormPage() {
                         <CardTitle>Detalles adicionales</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        <div>
+                            <label className="mb-1.5 block text-sm font-medium">
+                                Comunidad Escolar
+                            </label>
+                            <select
+                                name="school"
+                                value={formData.school}
+                                onChange={handleChange}
+                                disabled={submitting}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <option value="">General (Cualquier persona)</option>
+                                {schoolsList.map((school) => school.available && (
+                                    <option key={school.id} value={school.id}>
+                                        {school.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                                Si seleccionas un colegio, tu artículo aparecerá en la sección exclusiva de esa comunidad.
+                            </p>
+                        </div>
+
                         <div className="grid gap-4 sm:grid-cols-3">
                             <div>
                                 <label className="mb-1.5 block text-sm font-medium">

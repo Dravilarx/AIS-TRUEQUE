@@ -37,22 +37,26 @@ export function HomePage() {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75"></span>
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-white"></span>
                         </span>
-                        Marketplace para nuestra comunidad escolar
+                        Marketplace para nuestra comunidad en Jardines
                     </div>
                     <h1 className="mt-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
                         Compra, vende e intercambia
                         <br />
-                        <span className="text-white/80 font-light">con confianza.</span>
+                        <span className="text-white/80 font-light">en tu comunidad.</span>
                     </h1>
                     <p className="mt-6 text-lg text-primary-foreground/80 leading-relaxed">
-                        Encuentra uniformes, libros y servicios ofrecidos por otras familias del colegio.
-                        Ahorra, ayuda al planeta y fortalece nuestra comunidad.
+                        Encuentra artículos y servicios ofrecidos por tus vecinos. Explora el Marketplace general o ingresa a la sección exclusiva de tu colegio.
                     </p>
                     <div className="mt-10 flex flex-wrap gap-4">
                         <Link to="/marketplace">
                             <Button size="lg" variant="secondary" className="h-12 px-8 font-bold shadow-lg transition-transform hover:scale-105 active:scale-95">
                                 <ShoppingBag className="mr-2 h-5 w-5" />
                                 Ver Marketplace
+                            </Button>
+                        </Link>
+                        <Link to="/colegios">
+                            <Button size="lg" className="h-12 bg-white/20 hover:bg-white/30 text-white border-0 px-8 shadow-sm transition-transform hover:scale-105">
+                                Colegios
                             </Button>
                         </Link>
                         <Link to="/marketplace/new">
@@ -93,20 +97,20 @@ export function HomePage() {
                         Ver todas
                     </Link>
                 </div>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                <div className="flex flex-wrap gap-4 items-stretch justify-center">
                     {categoriesLoading ? (
-                        Array.from({ length: 6 }).map((_, i) => (
-                            <Skeleton key={i} className="h-28 rounded-2xl" />
+                        Array.from({ length: 7 }).map((_, i) => (
+                            <Skeleton key={i} className="h-32 w-36 rounded-2xl shrink-0" />
                         ))
                     ) : (
                         categories.map((cat) => (
                             <Link
                                 key={cat.id}
                                 to={`/marketplace?category=${cat.slug}`}
-                                className={`group flex flex-col items-center gap-3 rounded-2xl ${cat.color} p-6 transition-all hover:scale-105 hover:shadow-lg`}
+                                className={`group flex flex-col items-center justify-center gap-3 rounded-2xl ${cat.color} p-6 transition-all hover:scale-105 hover:shadow-lg w-[140px] flex-grow sm:flex-grow-0`}
                             >
                                 <span className="text-4xl transition-transform group-hover:scale-110">{cat.icon}</span>
-                                <span className="text-sm font-bold text-gray-800">{cat.name}</span>
+                                <span className="text-sm font-bold text-gray-800 text-center">{cat.name}</span>
                             </Link>
                         ))
                     )}
@@ -188,9 +192,9 @@ export function HomePage() {
                         <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                             <Heart className="h-6 w-6" />
                         </div>
-                        <h2 className="text-3xl font-bold tracking-tight">Una comunidad, mil ahorros</h2>
+                        <h2 className="text-3xl font-bold tracking-tight">Dato Jardines, tu comunidad</h2>
                         <p className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0">
-                            AIS Trueque nace para facilitar la vida de los padres. Reutilizar no solo es bueno para el bolsillo, sino también para enseñar sostenibilidad a nuestros hijos.
+                            Dato Jardines nace para facilitar la vida de nuestros vecinos. Reutilizar no solo es bueno para el bolsillo, sino también para enseñar sostenibilidad a nuestros hijos y fortalecer nuestras comunidades escolares.
                         </p>
                     </div>
                 </div>

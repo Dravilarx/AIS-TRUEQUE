@@ -14,6 +14,7 @@ import {
     Moon,
     Sun,
     Shield,
+    School,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,7 @@ import { cn, getInitials } from '@/lib/utils';
 const navItems = [
     { href: '/', label: 'Inicio', icon: Home },
     { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+    { href: '/colegios', label: 'Colegios', icon: School },
     { href: '/services', label: 'Servicios', icon: Briefcase },
     { href: '/membership', label: 'Membresía', icon: Shield },
     { href: '/profile', label: 'Mi Perfil', icon: User },
@@ -45,11 +47,11 @@ export function MainLayout() {
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
-                            <span className="text-xl font-bold tracking-tighter">AT</span>
+                            <span className="text-xl font-bold tracking-tighter">DJ</span>
                         </div>
                         <div className="flex flex-col leading-none">
-                            <span className="text-lg font-bold tracking-tight text-foreground">AIS</span>
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Trueque</span>
+                            <span className="text-lg font-bold tracking-tight text-foreground">Dato</span>
+                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">Jardines</span>
                         </div>
                     </Link>
 

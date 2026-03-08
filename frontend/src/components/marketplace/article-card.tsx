@@ -3,6 +3,7 @@ import { Heart, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn, formatPrice, formatRelativeTime } from '@/lib/utils';
 import type { Article, ArticleWithSeller } from '@/types';
+import { TrustBadge } from '@/components/shared/trust-badge';
 
 interface ArticleCardProps {
     article: Article | ArticleWithSeller;
@@ -115,6 +116,16 @@ export function ArticleCard({ article, className }: ArticleCardProps) {
                                     Talla {article.metadata.size}
                                 </span>
                             )}
+                        </div>
+                    )}
+
+                    {/* Seller */}
+                    {'seller' in article && article.seller && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 p-1.5 rounded-md border border-muted/50">
+                            <span className="truncate max-w-[120px] font-medium text-foreground/80">
+                                {article.seller.displayName}
+                            </span>
+                            <TrustBadge tier={article.seller.accountTier} />
                         </div>
                     )}
 

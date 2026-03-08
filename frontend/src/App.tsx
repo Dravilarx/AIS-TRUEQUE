@@ -19,9 +19,10 @@ import { ProfilePage } from '@/pages/profile';
 import { AdminPanel } from '@/pages/admin/admin-panel';
 import { MembershipPage } from '@/pages/membership/membership-page';
 import { PaymentStatusPage } from '@/pages/membership/payment-status';
+import { SchoolsPage } from '@/pages/schools';
 
 // Protected route wrapper
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, requiredTier = 'free' }: { children: React.ReactNode, requiredTier?: string }) {
   const { user, loading, isMembershipActive } = useAuth();
 
   if (loading) {
@@ -34,6 +35,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Check account tier level
+  const roleHierarchy: Record<string, number> = {
+    'free': 0,
+    'verified': 1,
+    'premium': 1,
+    'business': 2
+  };
+
+  const userTier = user.accountTier || 'free';
+  const userLevel = roleHierarchy[userTier] ?? 0;
+  const requiredLevel = roleHierarchy[requiredTier] ?? 0;
+
+  if (userLevel < requiredLevel) {
+    return <Navigate to="/membership" replace />;
   }
 
   if (!isMembershipActive) {
@@ -110,31 +127,47 @@ function App() {
             <Route path="/pago-fallido" element={<PaymentStatusPage status="failure" />} />
             <Route path="/pago-pendiente" element={<PaymentStatusPage status="pending" />} />
 
-            {/* Protected routes with MainLayout */}
+            {/* Nivel 0 - Free (Usuarios Básicos) */}
             <Route
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredTier="free">
                   <MainLayout />
                 </ProtectedRoute>
               }
             >
               <Route path="/" element={<HomePage />} />
-
-              {/* Marketplace routes */}
               <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
+              <Route path="/colegios" element={<SchoolsPage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/services/:id" element={<ServiceDetailPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/marketplace/new" element={<ArticleFormPage />} />
               <Route path="/marketplace/edit/:id" element={<ArticleFormPage />} />
               <Route path="/marketplace/my-listings" element={<MyListingsPage />} />
-              <Route path="/marketplace/:id" element={<ArticleDetailPage />} />
+            </Route>
 
-              {/* Services routes */}
-              <Route path="/services" element={<ServicesPage />} />
+            {/* Nivel 1 - Verified (Vecinos Validados que pueden vender y listar) */}
+            <Route
+              element={
+                <ProtectedRoute requiredTier="verified">
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Rutas exclusivas adicionales para nivel 1 si las hay */}
+            </Route>
+
+            {/* Nivel 2 - Business (Cuentas Profesionales/Negocios para ofrecer servicios) */}
+            <Route
+              element={
+                <ProtectedRoute requiredTier="business">
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/services/register" element={<ServiceFormPage />} />
               <Route path="/services/edit/:id" element={<ServiceFormPage />} />
-              <Route path="/services/:id" element={<ServiceDetailPage />} />
-
-              {/* Profile */}
-              <Route path="/profile" element={<ProfilePage />} />
             </Route>
 
             {/* Admin routes */}

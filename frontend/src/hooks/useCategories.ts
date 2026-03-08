@@ -78,12 +78,13 @@ export function useCategories(type?: 'article' | 'service') {
 // Default categories fallback
 function getDefaultCategories(type?: 'article' | 'service'): Category[] {
     const articleCategories: Category[] = [
-        { id: 'uniformes', name: 'Uniformes', slug: 'uniformes', icon: '👕', color: 'bg-blue-100', type: 'article', order: 1, isActive: true },
-        { id: 'libros', name: 'Libros', slug: 'libros', icon: '📚', color: 'bg-green-100', type: 'article', order: 2, isActive: true },
-        { id: 'utiles', name: 'Útiles', slug: 'utiles', icon: '✏️', color: 'bg-yellow-100', type: 'article', order: 3, isActive: true },
-        { id: 'deportes', name: 'Deportes', slug: 'deportes', icon: '⚽', color: 'bg-red-100', type: 'article', order: 4, isActive: true },
-        { id: 'tecnologia', name: 'Tecnología', slug: 'tecnologia', icon: '💻', color: 'bg-purple-100', type: 'article', order: 5, isActive: true },
-        { id: 'otros', name: 'Otros', slug: 'otros', icon: '📦', color: 'bg-gray-100', type: 'article', order: 6, isActive: true },
+        { id: 'hogar', name: 'Hogar', slug: 'hogar', icon: '🏠', color: 'bg-blue-100', type: 'article', order: 1, isActive: true },
+        { id: 'tecnologia', name: 'Tecnología', slug: 'tecnologia', icon: '💻', color: 'bg-purple-100', type: 'article', order: 2, isActive: true },
+        { id: 'ropa', name: 'Ropa y Accesorios', slug: 'ropa', icon: '👕', color: 'bg-pink-100', type: 'article', order: 3, isActive: true },
+        { id: 'vehiculos', name: 'Vehículos', slug: 'vehiculos', icon: '🚗', color: 'bg-yellow-100', type: 'article', order: 4, isActive: true },
+        { id: 'escolar', name: 'Escolar', slug: 'escolar', icon: '📚', color: 'bg-green-100', type: 'article', order: 5, isActive: true },
+        { id: 'deportes', name: 'Deportes', slug: 'deportes', icon: '⚽', color: 'bg-red-100', type: 'article', order: 6, isActive: true },
+        { id: 'otros', name: 'Otros', slug: 'otros', icon: '📦', color: 'bg-gray-100', type: 'article', order: 7, isActive: true },
     ];
 
     const serviceCategories: Category[] = [

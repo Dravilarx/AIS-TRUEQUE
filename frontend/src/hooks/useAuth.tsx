@@ -34,11 +34,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     // Fetch user data from Firestore
-    const fetchUserData = useCallback(async (uid: string): Promise<User | null> => {
+    const fetchUserData = useCallback(async (uid: string, fallbackUser?: FirebaseUser): Promise<User | null> => {
         try {
             const userDoc = await getDoc(doc(db, 'users', uid));
             if (userDoc.exists()) {
-                return { id: userDoc.id, ...userDoc.data() } as User;
+                const data = userDoc.data();
+                return {
+                    id: userDoc.id,
+                    ...data,
+                    accountTier: data.accountTier || 'free',
+                    kycStatus: data.kycStatus || 'unverified'
+                } as User;
+            }
+
+            // If user exists in Auth but not in Firestore, inject base tier
+            if (fallbackUser) {
+                return {
+                    id: fallbackUser.uid,
+                    email: fallbackUser.email || '',
+                    displayName: fallbackUser.displayName || 'Usuario',
+                    accountTier: 'free',
+                    kycStatus: 'unverified',
+                } as any as User;
             }
             return null;
         } catch (error) {
@@ -59,10 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 email: firebaseUser.email!,
                 displayName,
                 photoURL: firebaseUser.photoURL || undefined,
+                accountTier: 'free',
+                kycStatus: 'unverified',
                 membership: {
                     status: 'pending',
                     expiresAt: oneYearFromNow,
                     plan: 'annual',
+                    startedAt: now,
+                    autoRenew: true,
                 },
                 preferences: {
                     grades: [],
@@ -92,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (firebaseUser) {
                 const [userData, idTokenResult] = await Promise.all([
-                    fetchUserData(firebaseUser.uid),
+                    fetchUserData(firebaseUser.uid, firebaseUser),
                     firebaseUser.getIdTokenResult()
                 ]);
                 setUser(userData);

@@ -160,18 +160,19 @@ class CategoriesService {
         }
 
         const defaultArticleCategories = [
-            { name: 'Uniformes', slug: 'uniformes', icon: '👕', color: 'bg-blue-100' },
-            { name: 'Libros', slug: 'libros', icon: '📚', color: 'bg-green-100' },
-            { name: 'Útiles Escolares', slug: 'utiles', icon: '✏️', color: 'bg-yellow-100' },
-            { name: 'Deportes', slug: 'deportes', icon: '⚽', color: 'bg-red-100' },
+            { name: 'Hogar', slug: 'hogar', icon: '🏠', color: 'bg-blue-100' },
             { name: 'Tecnología', slug: 'tecnologia', icon: '💻', color: 'bg-purple-100' },
+            { name: 'Ropa y Accesorios', slug: 'ropa', icon: '👕', color: 'bg-pink-100' },
+            { name: 'Vehículos', slug: 'vehiculos', icon: '🚗', color: 'bg-yellow-100' },
+            { name: 'Escolar', slug: 'escolar', icon: '📚', color: 'bg-green-100' },
+            { name: 'Deportes', slug: 'deportes', icon: '⚽', color: 'bg-red-100' },
             { name: 'Otros', slug: 'otros', icon: '📦', color: 'bg-gray-100' },
         ];
 
         const defaultServiceCategories = [
             { name: 'Clases Particulares', slug: 'tutoring', icon: '📖', color: 'bg-indigo-100' },
-            { name: 'Transporte Escolar', slug: 'transport', icon: '🚐', color: 'bg-orange-100' },
-            { name: 'Colaciones/Almuerzos', slug: 'catering', icon: '🍱', color: 'bg-amber-100' },
+            { name: 'Servicios Profesionales', slug: 'professional', icon: '💼', color: 'bg-orange-100' },
+            { name: 'Alimentación', slug: 'food', icon: '🍱', color: 'bg-amber-100' },
             { name: 'Eventos/Cumpleaños', slug: 'events', icon: '🎉', color: 'bg-pink-100' },
             { name: 'Reparaciones', slug: 'repairs', icon: '🔧', color: 'bg-slate-100' },
             { name: 'Otros Servicios', slug: 'other', icon: '🛠️', color: 'bg-gray-100' },

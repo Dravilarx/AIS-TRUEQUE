@@ -14,6 +14,7 @@ import {
     startAfter,
     Timestamp,
     DocumentSnapshot,
+    getCountFromServer,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from './useAuth';
@@ -26,7 +27,7 @@ const PAGE_SIZE = 12;
 import { prepareForFirestore } from '@/lib/firestore-utils';
 
 export function useArticles() {
-    const { user, firebaseUser } = useAuth();
+    const { firebaseUser } = useAuth();
     const [articles, setArticles] = useState<ArticleWithSeller[]>([]);
     const [myArticles, setMyArticles] = useState<Article[]>([]);
     const [loading, setLoading] = useState(false);
@@ -60,6 +61,10 @@ export function useArticles() {
             q = query(q, where('price', '<=', filters.maxPrice));
         }
 
+        if (filters.school) {
+            q = query(q, where('metadata.school', '==', filters.school));
+        }
+
         return q;
     }, []);
 
@@ -78,10 +83,25 @@ export function useArticles() {
                 }
 
                 const snapshot = await getDocs(q);
-                const newArticles = snapshot.docs.map((doc) => ({
+                const rawArticles = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
-                })) as ArticleWithSeller[];
+                })) as Article[];
+
+                // Fetch sellers for these articles
+                const newArticles: ArticleWithSeller[] = await Promise.all(
+                    rawArticles.map(async (article) => {
+                        try {
+                            const sellerSnap = await getDoc(doc(db, 'users', article.sellerId));
+                            if (sellerSnap.exists()) {
+                                return { ...article, seller: { id: sellerSnap.id, ...sellerSnap.data() } };
+                            }
+                        } catch (err) {
+                            console.warn("Could not fetch seller for article", article.id);
+                        }
+                        return { ...article, seller: null } as any;
+                    })
+                );
 
                 if (reset) {
                     setArticles(newArticles);
@@ -109,15 +129,29 @@ export function useArticles() {
     }, [hasMore, loading, currentFilters, fetchArticles]);
 
     // Get single article by ID
-    const getArticle = useCallback(async (id: string): Promise<Article | null> => {
+    const getArticle = useCallback(async (id: string): Promise<ArticleWithSeller | null> => {
         try {
             const docRef = doc(db, ARTICLES_COLLECTION, id);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
+                const articleData = docSnap.data();
                 // Increment views
-                await updateDoc(docRef, { views: (docSnap.data().views || 0) + 1 });
-                return { id: docSnap.id, ...docSnap.data() } as Article;
+                await updateDoc(docRef, { views: (articleData.views || 0) + 1 });
+
+                const article = { id: docSnap.id, ...articleData } as Article;
+
+                // Fetch seller
+                try {
+                    const sellerSnap = await getDoc(doc(db, 'users', article.sellerId));
+                    if (sellerSnap.exists()) {
+                        return { ...article, seller: { id: sellerSnap.id, ...sellerSnap.data() } } as ArticleWithSeller;
+                    }
+                } catch (err) {
+                    console.warn("Could not fetch seller", err);
+                }
+
+                return { ...article, seller: undefined } as unknown as ArticleWithSeller;
             }
 
             return null;
@@ -276,6 +310,25 @@ export function useArticles() {
         }
     }, [firebaseUser]);
 
+    // Count user's active articles
+    const getActiveArticlesCount = useCallback(async (): Promise<number> => {
+        const uid = firebaseUser?.uid;
+        if (!uid) return 0;
+
+        try {
+            const q = query(
+                collection(db, ARTICLES_COLLECTION),
+                where('sellerId', '==', uid),
+                where('status', '==', 'active')
+            );
+            const snapshot = await getCountFromServer(q);
+            return snapshot.data().count;
+        } catch (error) {
+            console.error('Error counting active articles:', error);
+            return 0;
+        }
+    }, [firebaseUser]);
+
     return {
         articles,
         myArticles,
@@ -289,5 +342,6 @@ export function useArticles() {
         deleteArticle,
         fetchMyArticles,
         getMyArticles,
+        getActiveArticlesCount,
     };
 }

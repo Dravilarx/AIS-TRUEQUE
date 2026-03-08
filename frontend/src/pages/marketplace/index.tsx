@@ -10,6 +10,7 @@ import { useArticles } from '@/hooks/useArticles';
 import { useCategories } from '@/hooks/useCategories';
 import { ArticleCondition } from '@/types';
 import { cn } from '@/lib/utils';
+import { schoolsList } from '@/pages/schools';
 
 const conditions: { value: ArticleCondition | ''; label: string }[] = [
     { value: '', label: 'Todos los estados' },
@@ -31,7 +32,7 @@ const priceRanges = [
 export function MarketplacePage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { articles, loading, fetchArticles, hasMore, loadMore } = useArticles();
-    const { categories, loading: categoriesLoading } = useCategories('article');
+    const { categories } = useCategories('article');
 
     // Filter state from URL
     const [showFilters, setShowFilters] = useState(false);
@@ -40,6 +41,10 @@ export function MarketplacePage() {
     const activeCategory = searchParams.get('category') || '';
     const activeCondition = searchParams.get('condition') || '';
     const activePriceRange = searchParams.get('price') || '';
+    const activeSchool = searchParams.get('school') || '';
+
+    // Filter on school lookup
+    const selectedSchoolData = activeSchool ? schoolsList.find(s => s.id === activeSchool) : null;
 
     // Fetch on filter change
     useEffect(() => {
@@ -47,6 +52,7 @@ export function MarketplacePage() {
 
         if (activeCategory) filters.category = activeCategory;
         if (activeCondition) filters.condition = activeCondition;
+        if (activeSchool) filters.school = activeSchool;
 
         if (activePriceRange) {
             const [min, max] = activePriceRange.split('-');
@@ -55,7 +61,7 @@ export function MarketplacePage() {
         }
 
         fetchArticles(filters, true);
-    }, [activeCategory, activeCondition, activePriceRange]);
+    }, [activeCategory, activeCondition, activePriceRange, activeSchool]);
 
     // Update URL params
     const updateFilter = (key: string, value: string) => {
@@ -91,13 +97,22 @@ export function MarketplacePage() {
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">Marketplace</h1>
-                    <p className="text-muted-foreground">
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-bold">
+                            {selectedSchoolData ? `Comunidad: ${selectedSchoolData.name}` : 'Marketplace General'}
+                        </h1>
+                        {selectedSchoolData && (
+                            <Button variant="ghost" size="sm" onClick={() => updateFilter('school', '')} className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground">
+                                Quitar filtro <X className="ml-1 h-3 w-3" />
+                            </Button>
+                        )}
+                    </div>
+                    <p className="text-muted-foreground mt-1">
                         {filteredArticles.length} artículos disponibles
                     </p>
                 </div>
 
-                <Link to="/marketplace/new">
+                <Link to={`/marketplace/new${activeSchool ? `?school=${activeSchool}` : ''}`}>
                     <Button>
                         <Plus className="mr-2 h-4 w-4" />
                         Publicar artículo

@@ -10,6 +10,8 @@ export interface User {
     displayName: string;
     photoURL?: string;
     phone?: string;
+    accountTier: 'free' | 'premium' | 'business' | string;
+    kycStatus: 'unverified' | 'pending' | 'verified' | 'rejected' | string;
     membership: Membership;
     preferences: UserPreferences;
     stats: UserStats;
@@ -58,6 +60,7 @@ export interface ArticleMetadata {
     grade?: string;
     size?: string;
     brand?: string;
+    school?: string; // e.g. 'AIS', 'Antonio Rendic', 'British School', or 'general'
 }
 
 export interface Article {
@@ -80,7 +83,7 @@ export interface Article {
 }
 
 export interface ArticleWithSeller extends Article {
-    seller: Pick<User, 'id' | 'displayName' | 'photoURL' | 'stats'>;
+    seller: Pick<User, 'id' | 'displayName' | 'photoURL' | 'stats' | 'accountTier' | 'kycStatus'>;
 }
 
 // ============================================
@@ -162,6 +165,7 @@ export interface ArticleFilters {
     grade?: string;
     size?: string;
     search?: string;
+    school?: string;
 }
 
 export interface ServiceFilters {

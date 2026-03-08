@@ -11,6 +11,7 @@ import { useArticles } from '@/hooks/useArticles';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
 import { ArticleCondition } from '@/types';
+import { TrustBadge } from '@/components/shared/trust-badge';
 import toast from 'react-hot-toast';
 
 const conditionLabels: Record<ArticleCondition, { label: string; color: string }> = {
@@ -29,6 +30,7 @@ export function ArticleDetailPage() {
     const [article, setArticle] = useState<any>(null);
     const [currentImage, setCurrentImage] = useState(0);
     const [deleting, setDeleting] = useState(false);
+    const [showShareOptions, setShowShareOptions] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -58,22 +60,7 @@ export function ArticleDetailPage() {
         );
     };
 
-    const handleShare = async () => {
-        try {
-            if (navigator.share) {
-                await navigator.share({
-                    title: article.title,
-                    text: `Mira este artículo: ${article.title}`,
-                    url: window.location.href,
-                });
-            } else {
-                await navigator.clipboard.writeText(window.location.href);
-                toast.success('Enlace copiado al portapapeles');
-            }
-        } catch (error) {
-            // User cancelled or error
-        }
-    };
+
 
     const handleContact = () => {
         // TODO: Implement chat/messaging
@@ -188,9 +175,48 @@ export function ArticleDetailPage() {
                         <div className="flex items-start justify-between gap-4">
                             <h1 className="text-2xl font-bold">{article.title}</h1>
                             <div className="flex gap-2">
-                                <Button variant="ghost" size="icon" onClick={handleShare}>
-                                    <Share2 className="h-5 w-5" />
-                                </Button>
+                                <div className="relative">
+                                    <Button variant="ghost" size="icon" onClick={() => setShowShareOptions(!showShareOptions)}>
+                                        <Share2 className="h-5 w-5" />
+                                    </Button>
+
+                                    {showShareOptions && (
+                                        <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border bg-background p-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-2">
+                                            <button
+                                                onClick={() => {
+                                                    const url = window.location.href;
+                                                    const text = `Mira este artículo en Dato Jardines: ${article.title}`;
+                                                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + url)}`, '_blank');
+                                                    setShowShareOptions(false);
+                                                }}
+                                                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted text-left"
+                                            >
+                                                <span className="text-green-600">📱</span> WhatsApp
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const url = window.location.href;
+                                                    const text = `Mira este artículo en Dato Jardines: ${article.title}`;
+                                                    window.open(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`, '_blank');
+                                                    setShowShareOptions(false);
+                                                }}
+                                                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted text-left"
+                                            >
+                                                <span className="text-blue-500">✈️</span> Telegram
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(window.location.href);
+                                                    toast.success('Enlace copiado al portapapeles');
+                                                    setShowShareOptions(false);
+                                                }}
+                                                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted text-left"
+                                            >
+                                                <span>🔗</span> Copiar Enlace
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 <Button variant="ghost" size="icon">
                                     <Heart className="h-5 w-5" />
                                 </Button>
@@ -267,9 +293,12 @@ export function ArticleDetailPage() {
                                     {article.seller?.displayName?.[0] || 'U'}
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-medium">
-                                        {article.seller?.displayName || 'Usuario'}
-                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-medium">
+                                            {article.seller?.displayName || 'Usuario'}
+                                        </p>
+                                        <TrustBadge tier={article.seller?.accountTier} />
+                                    </div>
                                     {article.seller?.stats && (
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <StarRating rating={article.seller.stats.averageRating} size="sm" />

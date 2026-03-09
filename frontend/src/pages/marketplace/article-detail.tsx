@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
     ArrowLeft, Heart, Share2, MessageCircle, Edit, Trash2,
-    Eye, Clock, Tag, ChevronLeft, ChevronRight, Loader2
+    Eye, Clock, Tag, ChevronLeft, ChevronRight, Loader2, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { StarRating } from '@/components/shared/star-rating';
 import { useArticles } from '@/hooks/useArticles';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
@@ -301,7 +300,8 @@ export function ArticleDetailPage() {
                                     </div>
                                     {article.seller?.stats && (
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <StarRating rating={article.seller.stats.averageRating} size="sm" />
+                                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-500" />
+                                            <span className="font-medium text-foreground">{article.seller.stats.averageRating}</span>
                                             <span>({article.seller.stats.ratingsCount} reseñas)</span>
                                         </div>
                                     )}

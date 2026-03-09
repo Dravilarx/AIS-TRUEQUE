@@ -1,16 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-    ArrowLeft, Phone, Mail, MessageCircle, Star, CheckCircle,
+    ArrowLeft, Phone, Mail, MessageCircle, CheckCircle,
     Clock, Edit, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StarRating } from '@/components/shared/star-rating';
-import { RatingForm } from '@/components/shared/rating-form';
-import { RatingList, RatingSummary } from '@/components/shared/rating-list';
+import { Card, CardContent } from '@/components/ui/card';
 import { useServices } from '@/hooks/useServices';
-import { useRatings } from '@/hooks/useRatings';
 import { useAuth } from '@/hooks/useAuth';
 import { ServiceProvider } from '@/types';
 import { cn } from '@/lib/utils';
@@ -30,25 +26,12 @@ export function ServiceDetailPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { getService, loading } = useServices();
-    const {
-        ratings,
-        fetchRatings,
-        hasUserRated,
-        createRating,
-        getRatingSummary,
-        loading: ratingsLoading
-    } = useRatings();
-
     const [service, setService] = useState<ServiceProvider | null>(null);
     const [currentImage, setCurrentImage] = useState(0);
-    const [showRatingForm, setShowRatingForm] = useState(false);
-    const [canRate, setCanRate] = useState(false);
-    const [ratingSummary, setRatingSummary] = useState<any>(null);
 
     useEffect(() => {
         if (id) {
             loadService(id);
-            loadRatings(id);
         }
     }, [id]);
 
@@ -59,17 +42,6 @@ export function ServiceDetailPage() {
         } else {
             toast.error('Servicio no encontrado');
             navigate('/services');
-        }
-    };
-
-    const loadRatings = async (serviceId: string) => {
-        await fetchRatings(serviceId, 'service');
-        const summary = await getRatingSummary(serviceId, 'service');
-        setRatingSummary(summary);
-
-        if (user) {
-            const hasRated = await hasUserRated(serviceId, 'service');
-            setCanRate(!hasRated);
         }
     };
 
@@ -92,22 +64,6 @@ export function ServiceDetailPage() {
         }
     };
 
-    const handleRatingSubmit = async (data: {
-        score: { overall: number };
-        comment: string;
-        recommend: boolean;
-    }) => {
-        if (!id) return false;
-
-        const success = await createRating(id, 'service', data);
-        if (success) {
-            setShowRatingForm(false);
-            setCanRate(false);
-            loadRatings(id);
-        }
-        return success;
-    };
-
     if (loading || !service) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
@@ -116,7 +72,7 @@ export function ServiceDetailPage() {
         );
     }
 
-    const isOwner = user?.uid === service.userId;
+    const isOwner = user?.id === service.userId;
     const isVerified = service.verification?.status === 'verified';
 
     return (
@@ -184,40 +140,10 @@ export function ServiceDetailPage() {
                         </div>
                     )}
 
-                    {/* Ratings Section */}
+                    {/* Ratings Section Placeholder */}
                     <div className="space-y-4 pt-4">
                         <h2 className="text-xl font-bold">Calificaciones y Reseñas</h2>
-
-                        {/* Summary */}
-                        {ratingSummary && ratingSummary.totalRatings > 0 && (
-                            <RatingSummary {...ratingSummary} />
-                        )}
-
-                        {/* Rating Form */}
-                        {!isOwner && canRate && !showRatingForm && (
-                            <Button
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setShowRatingForm(true)}
-                            >
-                                <Star className="mr-2 h-4 w-4" />
-                                Escribir una reseña
-                            </Button>
-                        )}
-
-                        {showRatingForm && (
-                            <RatingForm
-                                targetId={id!}
-                                targetType="service"
-                                targetName={service.businessName}
-                                onSubmit={handleRatingSubmit}
-                                onCancel={() => setShowRatingForm(false)}
-                                loading={ratingsLoading}
-                            />
-                        )}
-
-                        {/* Rating List */}
-                        <RatingList ratings={ratings} loading={ratingsLoading} />
+                        <p className="text-muted-foreground">Próximamente...</p>
                     </div>
                 </div>
 
@@ -248,7 +174,9 @@ export function ServiceDetailPage() {
 
                         {/* Rating */}
                         <div className="mt-3 flex items-center gap-3">
-                            <StarRating rating={service.stats?.averageRating || 0} showValue />
+                            <span className="text-sm font-medium">
+                                ⭐ {service.stats?.averageRating?.toFixed(1) || '0.0'}
+                            </span>
                             <span className="text-sm text-muted-foreground">
                                 ({service.stats?.ratingsCount || 0} reseñas)
                             </span>

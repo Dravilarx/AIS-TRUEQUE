@@ -56,7 +56,7 @@ export const ArticlesTab: React.FC = () => {
 
     const handleToggleActive = async (article: Article) => {
         try {
-            const newStatus = article.status === 'available' ? 'sold' : 'available';
+            const newStatus = article.status === 'active' ? 'sold' : 'active';
             await updateDoc(doc(db, 'articles', article.id!), {
                 status: newStatus
             });
@@ -79,7 +79,7 @@ export const ArticlesTab: React.FC = () => {
 
     const filteredArticles = articles.filter(article => {
         if (filter === 'all') return true;
-        if (filter === 'active') return article.status === 'available';
+        if (filter === 'active') return article.status === 'active';
         if (filter === 'sold') return article.status === 'sold';
         return true;
     });
@@ -115,7 +115,7 @@ export const ArticlesTab: React.FC = () => {
                             className={`filter-btn ${filter === 'active' ? 'active' : ''}`}
                             onClick={() => setFilter('active')}
                         >
-                            Disponibles ({articles.filter(a => a.status === 'available').length})
+                            Disponibles ({articles.filter(a => a.status === 'active').length})
                         </button>
                         <button
                             className={`filter-btn ${filter === 'sold' ? 'active' : ''}`}
@@ -164,11 +164,11 @@ export const ArticlesTab: React.FC = () => {
                                 </td>
                                 <td className="whitespace-nowrap">${article.price.toLocaleString()}</td>
                                 <td>
-                                    <span className={`status-badge ${article.status === 'available' ? 'active' : 'sold'}`}>
-                                        {article.status === 'available' ? 'Disponible' : 'Vendido'}
+                                    <span className={`status-badge ${article.status === 'active' ? 'active' : 'sold'}`}>
+                                        {article.status === 'active' ? 'Disponible' : 'Vendido'}
                                     </span>
                                 </td>
-                                <td>{article.sellerName || 'Anónimo'}</td>
+                                <td>{(article as any).sellerName || 'Anónimo'}</td>
                                 <td>{formatDate(article.createdAt)}</td>
                                 <td>
                                     <div className="action-buttons">
@@ -183,9 +183,9 @@ export const ArticlesTab: React.FC = () => {
                                         <button
                                             onClick={() => handleToggleActive(article)}
                                             className="btn-action"
-                                            title={article.status === 'available' ? 'Marcar como vendido' : 'Marcar como disponible'}
+                                            title={article.status === 'active' ? 'Marcar como vendido' : 'Marcar como disponible'}
                                         >
-                                            {article.status === 'available' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
+                                            {article.status === 'active' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
                                         </button>
 
                                         <button
@@ -258,14 +258,14 @@ export const ArticlesTab: React.FC = () => {
 
                             <div className="article-detail">
                                 <label>Estado:</label>
-                                <span className={`status-badge ${selectedArticle.status === 'available' ? 'active' : 'sold'}`}>
-                                    {selectedArticle.status === 'available' ? 'Disponible' : 'Vendido'}
+                                <span className={`status-badge ${selectedArticle.status === 'active' ? 'active' : 'sold'}`}>
+                                    {selectedArticle.status === 'active' ? 'Disponible' : 'Vendido'}
                                 </span>
                             </div>
 
                             <div className="article-detail">
                                 <label>Vendedor:</label>
-                                <span>{selectedArticle.sellerName || 'Anónimo'}</span>
+                                <span>{(selectedArticle as any).sellerName || 'Anónimo'}</span>
                             </div>
 
                             <div className="article-detail">

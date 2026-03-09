@@ -7,7 +7,7 @@ import { ArticleGridSkeleton } from '@/components/shared/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useArticles } from '@/hooks/useArticles';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
-import { Article, ArticleStatus } from '@/types';
+import { ArticleStatus } from '@/types';
 import toast from 'react-hot-toast';
 
 const statusConfig: Record<ArticleStatus, { label: string; color: string }> = {

@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { CheckCircle, ShieldCheck, LogIn, ArrowRight, Store, UserIcon, Check } from 'lucide-react';
+import { CheckCircle, ShieldCheck, LogIn, Store, UserIcon, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
 import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { cn } from '@/lib/utils';
-
 export const MembershipPage = () => {
     const { user, loading: authLoading } = useAuth();
     const [loadingTier, setLoadingTier] = useState<string | null>(null);

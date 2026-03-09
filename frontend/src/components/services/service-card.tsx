@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MessageCircle, Star, CheckCircle, Clock } from 'lucide-react';
+import { Phone, Mail, MessageCircle, CheckCircle, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StarRating } from '@/components/shared/star-rating';
 import { ServiceProvider } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -97,16 +96,9 @@ export function ServiceCard({ service }: ServiceCardProps) {
                     </Link>
 
                     {/* Rating */}
-                    <div className="mt-1 flex items-center gap-2">
-                        <StarRating rating={service.stats?.averageRating || 0} size="sm" />
-                        <span className="text-sm text-muted-foreground">
-                            ({service.stats?.ratingsCount || 0})
-                        </span>
-                        {(service.stats?.recommendations || 0) > 0 && (
-                            <span className="text-sm text-green-600">
-                                · {service.stats?.recommendations} recomendaciones
-                            </span>
-                        )}
+                    {/* Rating placeholder */}
+                    <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                        ⭐ {service.stats?.averageRating?.toFixed(1) || '0.0'} ({service.stats?.ratingsCount || 0} valoraciones)
                     </div>
 
                     {/* Description */}

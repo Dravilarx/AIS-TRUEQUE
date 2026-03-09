@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Briefcase, Trash2, Eye, CheckCircle, RefreshCw, Layers, Star } from 'lucide-react';
 import { collection, getDocs, doc, deleteDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
-import { Service } from '../../../types';
+import { ServiceProvider as Service } from '../../../types';
 import { formatDate } from '../../../lib/utils';
 
 export const ServicesTab: React.FC = () => {
@@ -56,9 +56,9 @@ export const ServicesTab: React.FC = () => {
 
     const handleToggleActive = async (service: Service) => {
         try {
-            const newStatus = service.status === 'active' ? 'completed' : 'active';
+            const newStatus = !service.isActive;
             await updateDoc(doc(db, 'services', service.id!), {
-                status: newStatus
+                isActive: newStatus
             });
             loadServices();
         } catch (err) {
@@ -79,8 +79,8 @@ export const ServicesTab: React.FC = () => {
 
     const filteredServices = services.filter(service => {
         if (filter === 'all') return true;
-        if (filter === 'active') return service.status === 'active';
-        if (filter === 'completed') return service.status === 'completed';
+        if (filter === 'active') return service.isActive;
+        if (filter === 'completed') return !service.isActive;
         return true;
     });
 
@@ -115,13 +115,13 @@ export const ServicesTab: React.FC = () => {
                             className={`filter-btn ${filter === 'active' ? 'active' : ''}`}
                             onClick={() => setFilter('active')}
                         >
-                            Activos ({services.filter(s => s.status === 'active').length})
+                            Activos ({services.filter(s => s.isActive).length})
                         </button>
                         <button
                             className={`filter-btn ${filter === 'completed' ? 'active' : ''}`}
                             onClick={() => setFilter('completed')}
                         >
-                            Completados ({services.filter(s => s.status === 'completed').length})
+                            Completados ({services.filter(s => !s.isActive).length})
                         </button>
                     </div>
                     <button onClick={loadServices} className="btn-refresh">
@@ -137,7 +137,6 @@ export const ServicesTab: React.FC = () => {
                             <th>Imagen</th>
                             <th>Título</th>
                             <th>Categoría</th>
-                            <th>Precio</th>
                             <th>Estado</th>
                             <th>Proveedor</th>
                             <th>Rating</th>
@@ -152,28 +151,28 @@ export const ServicesTab: React.FC = () => {
                                     {service.images && service.images.length > 0 ? (
                                         <img
                                             src={service.images[0]}
-                                            alt={service.title}
+                                            alt={service.businessName}
                                             className="service-thumbnail"
                                         />
                                     ) : (
                                         <div className="no-image"><Briefcase className="w-5 h-5 opacity-40" /></div>
                                     )}
                                 </td>
-                                <td className="font-medium">{service.title}</td>
+                                <td className="font-medium">{service.businessName}</td>
                                 <td>
                                     <span className="category-badge"><Layers className="w-3 h-3 mr-1" /> {service.category}</span>
                                 </td>
-                                <td className="whitespace-nowrap">${service.price.toLocaleString()}</td>
+                                <td className="whitespace-nowrap">${(service as any).price?.toLocaleString() || '0'}</td>
                                 <td>
-                                    <span className={`status-badge ${service.status === 'active' ? 'active' : 'completed'}`}>
-                                        {service.status === 'active' ? 'Activo' : 'Completado'}
+                                    <span className={`status-badge ${service.isActive ? 'active' : 'completed'}`}>
+                                        {service.isActive ? 'Activo' : 'Inactivo'}
                                     </span>
                                 </td>
-                                <td>{service.providerName || 'Anónimo'}</td>
+                                <td>{(service as any).providerName || 'Anónimo'}</td>
                                 <td>
                                     <div className="rating-display flex items-center">
                                         <Star className="w-3 h-3 mr-1 fill-current text-yellow-500" />
-                                        {service.averageRating?.toFixed(1) || '0.0'}
+                                        {service.stats?.averageRating?.toFixed(1) || '0.0'}
                                     </div>
                                 </td>
                                 <td>{formatDate(service.createdAt)}</td>
@@ -190,9 +189,9 @@ export const ServicesTab: React.FC = () => {
                                         <button
                                             onClick={() => handleToggleActive(service)}
                                             className="btn-action"
-                                            title={service.status === 'active' ? 'Marcar como completado' : 'Marcar como activo'}
+                                            title={service.isActive ? 'Marcar como inactivo' : 'Marcar como activo'}
                                         >
-                                            {service.status === 'active' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
+                                            {service.isActive ? <CheckCircle className="w-4 h-4 text-green-500" /> : <RefreshCw className="w-4 h-4" />}
                                         </button>
 
                                         <button
@@ -227,8 +226,8 @@ export const ServicesTab: React.FC = () => {
                         <div className="modal-body">
                             {selectedService.images && selectedService.images.length > 0 && (
                                 <div className="service-images">
-                                    {selectedService.images.map((img, idx) => (
-                                        <img key={idx} src={img} alt={`${selectedService.title} ${idx + 1}`} />
+                                    {selectedService.images.map((img: string, idx: number) => (
+                                        <img key={idx} src={img} alt={`${selectedService.businessName} ${idx + 1}`} />
                                     ))}
                                 </div>
                             )}
@@ -240,7 +239,7 @@ export const ServicesTab: React.FC = () => {
 
                             <div className="service-detail">
                                 <label>Título:</label>
-                                <span>{selectedService.title}</span>
+                                <span>{selectedService.businessName}</span>
                             </div>
 
                             <div className="service-detail">
@@ -255,39 +254,39 @@ export const ServicesTab: React.FC = () => {
 
                             <div className="service-detail">
                                 <label>Precio:</label>
-                                <span>${selectedService.price.toLocaleString()}</span>
+                                <span>${(selectedService as any).price?.toLocaleString() || '0'}</span>
                             </div>
 
                             <div className="service-detail">
                                 <label>Duración estimada:</label>
-                                <span>{selectedService.duration || 'No especificada'}</span>
+                                <span>{(selectedService as any).duration || 'No especificada'}</span>
                             </div>
 
                             <div className="service-detail">
                                 <label>Estado:</label>
-                                <span className={`status-badge ${selectedService.status === 'active' ? 'active' : 'completed'}`}>
-                                    {selectedService.status === 'active' ? 'Activo' : 'Completado'}
+                                <span className={`status-badge ${selectedService.isActive ? 'active' : 'completed'}`}>
+                                    {selectedService.isActive ? 'Activo' : 'Inactivo'}
                                 </span>
                             </div>
 
                             <div className="service-detail">
                                 <label>Proveedor:</label>
-                                <span>{selectedService.providerName || 'Anónimo'}</span>
+                                <span>{(selectedService as any).providerName || 'Anónimo'}</span>
                             </div>
 
                             <div className="service-detail">
                                 <label>ID Proveedor:</label>
-                                <span>{selectedService.providerId}</span>
+                                <span>{selectedService.userId}</span>
                             </div>
 
                             <div className="service-detail">
                                 <label>Rating Promedio:</label>
-                                <span>⭐ {selectedService.averageRating?.toFixed(2) || 'N/A'}</span>
+                                <span>⭐ {selectedService.stats?.averageRating?.toFixed(2) || 'N/A'}</span>
                             </div>
 
                             <div className="service-detail">
                                 <label>Total de Ratings:</label>
-                                <span>{selectedService.totalRatings || 0}</span>
+                                <span>{selectedService.stats?.ratingsCount || 0}</span>
                             </div>
 
                             <div className="service-detail">
@@ -295,18 +294,18 @@ export const ServicesTab: React.FC = () => {
                                 <span>{formatDate(selectedService.createdAt)}</span>
                             </div>
 
-                            {selectedService.views !== undefined && (
+                            {(selectedService as any).views !== undefined && (
                                 <div className="service-detail">
                                     <label>Vistas:</label>
-                                    <span>{selectedService.views}</span>
+                                    <span>{(selectedService as any).views}</span>
                                 </div>
                             )}
 
-                            {selectedService.tags && selectedService.tags.length > 0 && (
+                            {(selectedService as any).tags && (selectedService as any).tags.length > 0 && (
                                 <div className="service-detail">
                                     <label>Etiquetas:</label>
                                     <div className="tags-container">
-                                        {selectedService.tags.map((tag, idx) => (
+                                        {(selectedService as any).tags.map((tag: string, idx: number) => (
                                             <span key={idx} className="tag">{tag}</span>
                                         ))}
                                     </div>

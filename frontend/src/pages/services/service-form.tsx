@@ -35,7 +35,7 @@ export function ServiceFormPage() {
     const { id } = useParams<{ id: string }>();
     const isEditing = Boolean(id);
 
-    const { myService, getService, createService, updateService, fetchMyService, loading: serviceLoading } = useServices();
+    const { myService, getService, createService, updateService, fetchMyService } = useServices();
     const { categories, loading: categoriesLoading } = useCategories('service');
     const { uploadMultipleImages, uploading, compressImage } = useImageUpload();
 
@@ -139,7 +139,7 @@ export function ServiceFormPage() {
             const serviceData = {
                 businessName: formData.businessName.trim(),
                 description: formData.description.trim(),
-                category: formData.category,
+                category: formData.category as any,
                 contact: {
                     phone: formData.phone || undefined,
                     email: formData.email || undefined,

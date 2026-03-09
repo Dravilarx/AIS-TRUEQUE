@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Search, Filter, Briefcase, CheckCircle } from 'lucide-react';
+import { Plus, Search, Briefcase, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 export function ServicesPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { services, loading, fetchServices } = useServices();
-    const { categories, loading: categoriesLoading } = useCategories('service');
+    const { categories } = useCategories('service');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);

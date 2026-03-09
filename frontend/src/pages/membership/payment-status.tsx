@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Clock, ArrowRight, Loader2 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+
 
 export const PaymentStatusPage = ({ status }: { status: 'success' | 'failure' | 'pending' }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { userData } = useAuth();
     const [countdown, setCountdown] = useState(5);
 
     useEffect(() => {

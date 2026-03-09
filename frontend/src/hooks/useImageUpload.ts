@@ -12,7 +12,7 @@ interface UploadProgress {
 }
 
 export function useImageUpload() {
-    const { user, firebaseUser } = useAuth();
+    const { firebaseUser } = useAuth();
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
 
@@ -144,7 +144,7 @@ export function useImageUpload() {
         maxWidth = 1200,
         quality = 0.8
     ): Promise<File> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Set timeout for compression (10 seconds)
             const timeout = setTimeout(() => {
                 console.warn('Image compression timeout, using original file');

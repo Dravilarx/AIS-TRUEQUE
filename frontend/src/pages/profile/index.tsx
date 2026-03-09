@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     Mail, Phone, Calendar, Package, Briefcase,
@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { StarRating } from '@/components/shared/star-rating';
 import { useAuth } from '@/hooks/useAuth';
 import { useArticles } from '@/hooks/useArticles';
 import { useServices } from '@/hooks/useServices';
@@ -17,16 +16,12 @@ export function ProfilePage() {
     const { user, userData, signOut, loading: authLoading } = useAuth();
     const { myArticles, fetchMyArticles } = useArticles();
     const { myService, fetchMyService } = useServices();
-    const [loading, setLoading] = useState(true);
-
     useEffect(() => {
         loadData();
     }, []);
 
     const loadData = async () => {
-        setLoading(true);
         await Promise.all([fetchMyArticles(), fetchMyService()]);
-        setLoading(false);
     };
 
     const handleSignOut = async () => {
@@ -78,10 +73,12 @@ export function ProfilePage() {
                             <h1 className="text-2xl font-bold">{user.displayName || 'Usuario'}</h1>
                             <p className="text-muted-foreground">{user.email}</p>
 
-                            {/* Stats */}
+                            {/* Stats Placeholder */}
                             {userData?.stats && (
                                 <div className="mt-2 flex items-center justify-center gap-3 sm:justify-start">
-                                    <StarRating rating={userData.stats.averageRating || 0} size="sm" />
+                                    <span className="text-sm font-medium">
+                                        ⭐ {userData.stats.averageRating?.toFixed(1) || '0.0'}
+                                    </span>
                                     <span className="text-sm text-muted-foreground">
                                         ({userData.stats.ratingsCount || 0} reseñas)
                                     </span>
